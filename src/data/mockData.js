@@ -49,7 +49,7 @@ export const mockProjects = [
     title: "Bóvedas de Vino",
     category: "commercial",
     description: "Participé en el desarrollo de este proyecto integrando las especialidades eléctrica y estructural, colaborando con la empresa PointCloud en el levantamiento, modelamiento y coordinación técnica de las instalaciones.",
-    shortDescription: "Bóvedas de Vino",
+    shortDescription: "Proyecto especialidades eléctrica y estructural",
     images: [
       {
         id: "1",
@@ -72,7 +72,7 @@ export const mockProjects = [
     title: "Proyecto Basílica de La Merced",
     category: "Patrimonio",
     description: "Participé en la intervención de este inmueble patrimonial, desarrollando labores en el área de paisaje, integrando y levantando los distintos elementos y artefactos del entorno, además de colaborar en trabajos asociados a la fachada del proyecto.",
-    shortDescription: "Proyecto Basílica de La Merced",
+    shortDescription: "Intervención inmueble patrimonial",
     images: [
       {
         id: "2",
