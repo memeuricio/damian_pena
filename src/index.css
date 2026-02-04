@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+/* Custom CSS Variables for Professional Theme */
+:root {
+  /* Professional Color Palette */
+  --color-primary: #1a1a1a;
+  --color-secondary: #4a4a4a;
+  --color-accent: #2563eb;
+  --color-background: #ffffff;
+  --color-surface: #f8fafc;
+  --color-border: #e2e8f0;
+  --color-text-primary: #1e293b;
+  --color-text-secondary: #64748b;
+  --color-text-muted: #94a3b8;
+  
+  /* Spacing */
+  --spacing-section: 5rem;
+  --spacing-component: 2rem;
+  
+  /* Typography */
+  --font-heading: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Base Typography */
+body {
+  font-family: var(--font-body);
+  color: var(--color-text-primary);
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--color-primary);
+}
+
+/* Smooth Transitions */
+* {
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
+}
+
+/* Focus Styles for Accessibility */
+*:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Professional Button Reset */
+button {
+  font-family: inherit;
+}
+
+/* Image Optimization */
+img {
+  max-width: 100%;
+  height: auto;
+}
