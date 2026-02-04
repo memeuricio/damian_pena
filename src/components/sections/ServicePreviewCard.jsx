@@ -30,12 +30,22 @@ export default function ServicePreviewCard({ service }) {
     return icons[category] || icons.design;
   };
 
+  const getIconColor = (category) => {
+    const colors = {
+      design: 'bg-sky-100 text-sky-600 group-hover:bg-sky-200',
+      consultation: 'bg-emerald-100 text-emerald-600 group-hover:bg-emerald-200',
+      documentation: 'bg-accent-100 text-accent-600 group-hover:bg-accent-200',
+      renovation: 'bg-surface-100 text-primary-600 group-hover:bg-surface-200'
+    };
+    return colors[category] || colors.design;
+  };
+
   return (
     <Card hover className="text-center group">
       <Link to={`${ROUTES.SERVICES}#${service.id}`} className="block">
         {/* Icon */}
         <div className="mb-6">
-          <div className="w-16 h-16 bg-accent-100 rounded-xl flex items-center justify-center mx-auto text-accent-600 group-hover:bg-accent-200 transition-colors">
+          <div className={`w-16 h-16 rounded-xl flex items-center justify-center mx-auto transition-colors ${getIconColor(service.category)}`}>
             {getServiceIcon(service.category)}
           </div>
         </div>
@@ -54,7 +64,7 @@ export default function ServicePreviewCard({ service }) {
           <ul className="text-sm text-primary-500 space-y-1">
             {service.features.slice(0, 3).map((feature, index) => (
               <li key={index} className="flex items-center justify-center">
-                <svg className="w-4 h-4 text-accent-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-4 h-4 text-accent-500 mr-2 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
                 {feature}

@@ -38,7 +38,7 @@ export default function ProjectCard({ project, onClick }) {
       {/* Content */}
       <div className="p-6">
         <div className="flex items-center justify-between mb-3">
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-accent-100 text-accent-800">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-sky-100 text-sky-800">
             {getCategoryLabel(project.category)}
           </span>
           <span className="text-sm text-primary-500 font-medium">
@@ -46,7 +46,7 @@ export default function ProjectCard({ project, onClick }) {
           </span>
         </div>
 
-        <h3 className="text-xl font-semibold text-primary-900 mb-2 group-hover:text-accent-600 transition-colors">
+        <h3 className="text-xl font-semibold text-primary-900 mb-2 group-hover:text-sky-600 transition-colors">
           {project.title}
         </h3>
 

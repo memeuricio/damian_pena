@@ -1,21 +1,30 @@
 import { Link } from 'react-router-dom';
+import { memo } from 'react';
 import Button from '../common/Button';
 import { ROUTES } from '../../utils/constants';
 
-export default function Hero() {
+const Hero = memo(function Hero() {
   return (
-    <section className="relative bg-linear-to-br from-surface-50 to-surface-100 overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-5">
-        <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-          <defs>
-            <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
-              <path d="M 10 0 L 0 0 0 10" fill="none" stroke="currentColor" strokeWidth="0.5"/>
-            </pattern>
-          </defs>
-          <rect width="100" height="100" fill="url(#grid)" />
-        </svg>
-      </div>
+    <section className="relative bg-gradient-to-br from-sky-50 via-surface-50 to-emerald-50 overflow-hidden">
+      {/* Background Image */}
+      <div 
+        className="absolute inset-0 overflow-hidden pointer-events-none opacity-20"
+        style={{
+          backgroundImage: 'url(/bg2.jpeg)',
+          backgroundRepeat: 'no-repeat',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          willChange: 'transform'
+        }}
+      />
+      
+      {/* Bottom Gradient Overlay */}
+      <div 
+        className="absolute inset-x-0 bottom-0 h-32 pointer-events-none"
+        style={{
+          background: 'linear-gradient(to top, rgba(240, 249, 255, 1), transparent)'
+        }}
+      />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-32">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -24,7 +33,7 @@ export default function Hero() {
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-primary-900 mb-6 leading-tight">
               Damián Peña
               <span className="block text-2xl sm:text-3xl lg:text-4xl font-normal text-primary-600 mt-2">
-                Dibujante Arquitectónico Titulado
+                Dibujante Arquitectónico
               </span>
             </h1>
             
@@ -64,29 +73,26 @@ export default function Hero() {
           </div>
 
           {/* Image/Visual */}
-          <div className="relative">
-            <div className="aspect-square bg-linear-to-br from-accent-100 to-accent-200 rounded-2xl flex items-center justify-center">
-              {/* Placeholder for professional photo */}
-              <div className="text-center">
-                <div className="w-32 h-32 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                  <svg className="w-16 h-16 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                </div>
-                <p className="text-primary-600 text-sm">
-                  Foto profesional
-                  <br />
-                  (por agregar)
-                </p>
-              </div>
+          <div className="relative max-w-md mx-auto">
+            <div className="aspect-square bg-gradient-to-br from-sky-100 via-accent-100 to-emerald-100 rounded-full overflow-hidden shadow-lg">
+              {/* Professional photo */}
+              <img
+                src="/damian.jpg"
+                alt="Damián Peña - Dibujante Arquitectónico Titulado"
+                className="w-full h-full object-cover"
+                loading="eager"
+                decoding="async"
+              />
             </div>
 
             {/* Floating Elements */}
-            <div className="absolute -top-4 -right-4 w-24 h-24 bg-accent-500 rounded-lg opacity-20 rotate-12"></div>
-            <div className="absolute -bottom-4 -left-4 w-16 h-16 bg-primary-500 rounded-lg opacity-20 -rotate-12"></div>
+            <div className="absolute -top-3 -right-3 w-16 h-16 bg-sky-400 rounded-lg opacity-20 rotate-12 transform-gpu" />
+            <div className="absolute -bottom-3 -left-3 w-12 h-12 bg-emerald-400 rounded-lg opacity-20 -rotate-12 transform-gpu" />
           </div>
         </div>
       </div>
     </section>
   );
-}
+});
+
+export default Hero;

@@ -8,7 +8,7 @@ export default function FeaturedProjects() {
   const featuredProjects = mockProjects.filter(project => project.featured).slice(0, 3);
 
   return (
-    <section className="py-16 sm:py-24 bg-white">
+    <section className="py-16 sm:py-24 bg-gradient-to-br from-sky-50 via-surface-50 to-emerald-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">

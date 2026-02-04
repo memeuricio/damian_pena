@@ -43,7 +43,7 @@ export default function ProjectDetail({ project, isOpen, onClose, onNavigate }) 
                 {project.title}
               </h1>
               <div className="flex items-center space-x-4 text-sm text-primary-600">
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-accent-100 text-accent-800">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
                   {getCategoryLabel(project.category)}
                 </span>
                 <span>{project.specifications.year}</span>
@@ -159,7 +159,7 @@ export default function ProjectDetail({ project, isOpen, onClose, onNavigate }) 
                   onClick={() => setSelectedImageIndex(index)}
                   className={`shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
                     index === selectedImageIndex
-                      ? 'border-accent-500'
+                      ? 'border-sky-500'
                       : 'border-surface-200 hover:border-surface-300'
                   }`}
                 >

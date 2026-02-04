@@ -93,7 +93,7 @@ export default function ContactInfo() {
         {contactMethods.map((method, index) => (
           <div key={index} className="bg-white rounded-xl border border-surface-200 p-6 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-start space-x-4">
-              <div className="w-12 h-12 bg-accent-100 rounded-lg flex items-center justify-center text-accent-600 shrink-0">
+              <div className="w-12 h-12 bg-sky-100 rounded-lg flex items-center justify-center text-sky-600 shrink-0">
                 {method.icon}
               </div>
               
@@ -126,7 +126,7 @@ export default function ContactInfo() {
       </div>
 
       {/* Social Media */}
-      <div className="bg-surface-50 rounded-xl p-6">
+      <div className="bg-gradient-to-br from-emerald-50 via-surface-50 to-sky-50 rounded-xl p-6">
         <h3 className="text-lg font-semibold text-primary-900 mb-4 text-center">
           Sígueme en Redes Sociales
         </h3>
@@ -168,8 +168,8 @@ export default function ContactInfo() {
           </div>
         </div>
         
-        <div className="mt-4 p-3 bg-accent-50 rounded-lg">
-          <p className="text-sm text-accent-800 text-center">
+        <div className="mt-4 p-3 bg-sky-50 rounded-lg">
+          <p className="text-sm text-sky-800 text-center">
             <strong>Emergencias:</strong> Disponible 24/7 para proyectos urgentes
           </p>
         </div>

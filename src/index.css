@@ -13,6 +13,14 @@
   --color-text-secondary: #64748b;
   --color-text-muted: #94a3b8;
   
+  /* New Pastel Colors */
+  --color-sky-light: #f0f9ff;
+  --color-sky-medium: #bae6fd;
+  --color-sky-accent: #0ea5e9;
+  --color-emerald-light: #ecfdf5;
+  --color-emerald-medium: #a7f3d0;
+  --color-emerald-accent: #10b981;
+  
   /* Spacing */
   --spacing-section: 5rem;
   --spacing-component: 2rem;
@@ -56,4 +64,13 @@ button {
 img {
   max-width: 100%;
   height: auto;
+}
+
+/* Subtle gradient backgrounds for sections */
+.bg-gradient-sky {
+  background: linear-gradient(135deg, var(--color-sky-light) 0%, var(--color-surface) 100%);
+}
+
+.bg-gradient-emerald {
+  background: linear-gradient(135deg, var(--color-emerald-light) 0%, var(--color-surface) 100%);
 }

@@ -6,7 +6,7 @@ import { mockServices } from '../../data/mockData';
 
 export default function ServicesOverview() {
   return (
-    <section className="py-16 sm:py-24 bg-surface-50">
+    <section className="py-16 sm:py-24 bg-gradient-to-br from-emerald-50 via-surface-50 to-sky-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
@@ -54,20 +54,20 @@ export default function ServicesOverview() {
             </div>
             
             <div className="grid grid-cols-2 gap-6">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-accent-600 mb-2">24h</div>
+              <div className="text-center p-4 bg-sky-50 rounded-lg">
+                <div className="text-3xl font-bold text-sky-600 mb-2">24h</div>
                 <div className="text-sm text-primary-600">Respuesta promedio</div>
               </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-accent-600 mb-2">100%</div>
+              <div className="text-center p-4 bg-emerald-50 rounded-lg">
+                <div className="text-3xl font-bold text-emerald-600 mb-2">100%</div>
                 <div className="text-sm text-primary-600">Proyectos entregados</div>
               </div>
-              <div className="text-center">
+              <div className="text-center p-4 bg-accent-50 rounded-lg">
                 <div className="text-3xl font-bold text-accent-600 mb-2">3+</div>
                 <div className="text-sm text-primary-600">Años experiencia</div>
               </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-accent-600 mb-2">50+</div>
+              <div className="text-center p-4 bg-surface-100 rounded-lg">
+                <div className="text-3xl font-bold text-primary-700 mb-2">50+</div>
                 <div className="text-sm text-primary-600">Clientes satisfechos</div>
               </div>
             </div>
