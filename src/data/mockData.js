@@ -46,47 +46,45 @@ export const professionalProfile = {
 export const mockProjects = [
   {
     id: "1",
-    title: "Casa Unifamiliar Los Andes",
-    category: "residential",
-    description: "Proyecto de casa unifamiliar de 120m² con diseño moderno y funcional.",
-    shortDescription: "Casa unifamiliar moderna de 120m²",
+    title: "Bóvedas de Vino",
+    category: "commercial",
+    description: "Participé en el desarrollo de este proyecto integrando las especialidades eléctrica y estructural, colaborando con la empresa PointCloud en el levantamiento, modelamiento y coordinación técnica de las instalaciones.",
+    shortDescription: "Bóvedas de Vino",
     images: [
       {
         id: "1",
-        url: "/images/projects/casa-los-andes-1.jpg",
+        url: "/p2.jpeg",
         alt: "Vista frontal Casa Los Andes",
         caption: "Fachada principal",
         isPrimary: true
       }
     ],
     specifications: {
-      area: "120m²",
-      location: "Los Andes, Chile",
-      year: 2023,
+      location: "Pirque, Chile",
+      year: 2024,
       client: "Familia González"
     },
-    tags: ["residencial", "moderno", "sustentable"],
+    tags: ["commercial", "moderno", "sustentable"],
     featured: true
   },
   {
     id: "2",
-    title: "Oficinas Comerciales Centro",
-    category: "commercial",
-    description: "Diseño de oficinas comerciales de 300m² en el centro de Santiago.",
-    shortDescription: "Oficinas comerciales 300m²",
+    title: "Proyecto Basílica de La Merced",
+    category: "Patrimonio",
+    description: "Participé en la intervención de este inmueble patrimonial, desarrollando labores en el área de paisaje, integrando y levantando los distintos elementos y artefactos del entorno, además de colaborar en trabajos asociados a la fachada del proyecto.",
+    shortDescription: "Proyecto Basílica de La Merced",
     images: [
       {
         id: "2",
-        url: "/images/projects/oficinas-centro-1.jpg",
+        url: "/p1.jpeg",
         alt: "Interior oficinas centro",
         caption: "Área de trabajo principal",
         isPrimary: true
       }
     ],
     specifications: {
-      area: "300m²",
       location: "Santiago Centro, Chile",
-      year: 2023,
+      year: 2024,
       client: "Empresa XYZ"
     },
     tags: ["comercial", "oficinas", "corporativo"],

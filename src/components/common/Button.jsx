@@ -14,9 +14,9 @@ const Button = forwardRef(({
   const baseClasses = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
   
   const variantClasses = {
-    primary: 'bg-primary-800 text-white hover:bg-primary-700 focus:ring-primary-500',
-    secondary: 'bg-surface-100 text-primary-800 hover:bg-surface-200 focus:ring-primary-500 border border-surface-200',
-    outline: 'border border-primary-800 text-primary-800 hover:bg-primary-800 hover:text-white focus:ring-primary-500'
+    primary: 'bg-slate-900 text-white hover:bg-slate-800 hover:shadow-lg focus:ring-blue-500',
+    secondary: 'bg-slate-100 text-slate-900 hover:bg-slate-200 hover:shadow-md focus:ring-blue-500 border border-slate-200',
+    outline: 'border-2 border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white hover:shadow-lg focus:ring-blue-500'
   };
   
   const sizeClasses = {

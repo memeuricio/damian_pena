@@ -46,7 +46,7 @@ const Hero = memo(function Hero() {
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Link to={ROUTES.PORTFOLIO}>
-                  <Button variant="primary" size="lg" className="w-full sm:w-auto">
+                  <Button variant="outline" size="lg" className="w-full sm:w-auto">
                     Ver Portafolio
                   </Button>
                 </Link>
