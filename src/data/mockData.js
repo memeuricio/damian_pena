@@ -92,27 +92,26 @@ export const mockProjects = [
   },
   {
     id: "3",
-    title: "Remodelación Casa Patrimonial",
-    category: "renovation",
-    description: "Remodelación y restauración de casa patrimonial manteniendo elementos originales.",
-    shortDescription: "Remodelación casa patrimonial",
+    title: "Proyecto Iglesia El Buen Pastor",
+    category: "Patrimonial",
+    description: "Participé en la elaboración y desarrollo de la fachada de la iglesia, así como en el levantamiento y modelamiento del contexto del proyecto, colaborando con la empresa PointCloud.",
+    shortDescription: "Elaboración y desarrollo de la fachada de la iglesia",
     images: [
       {
         id: "3",
-        url: "/images/projects/casa-patrimonial-1.jpg",
+        url: "/p3.png",
         alt: "Casa patrimonial remodelada",
         caption: "Fachada restaurada",
         isPrimary: true
       }
     ],
     specifications: {
-      area: "180m²",
-      location: "Valparaíso, Chile",
+      location: "Independencia, Chile",
       year: 2022,
       client: "Municipalidad de Valparaíso"
     },
     tags: ["patrimonial", "restauración", "histórico"],
-    featured: false
+    featured: true
   }
 ];
 
