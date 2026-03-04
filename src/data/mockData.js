@@ -5,9 +5,9 @@ export const professionalProfile = {
     fullName: "Damián Peña",
     title: "Dibujante Arquitectónico Titulado",
     photo: "/images/profile/damian-pena.jpg", // Placeholder path
-    email: "damian.pena@email.com",
-    phone: "+56 9 1234 5678",
-    location: "Santiago, Chile",
+    email: "damiancpg@gmail.com",
+    phone: "+56 9 3223 3332",
+    location: "Maipú, Chile",
     summary: "Dibujante arquitectónico con experiencia en proyectos residenciales y comerciales, especializado en planos técnicos y visualización arquitectónica."
   },
   education: [
