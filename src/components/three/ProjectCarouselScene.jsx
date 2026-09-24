@@ -11,9 +11,11 @@ import {
 } from './projectIcons';
 import ProjectModel from './projectModels';
 import {
+  CAMERA_ELEVATION,
   OTHER_SCALE,
   OTHER_TINT,
   RADIUS,
+  RING_DEPTH,
   SELECTED_LIFT,
   SELECTED_SCALE,
   carouselBounds,
@@ -30,18 +32,36 @@ const SPIN_SPEED = 0.26;
 const SPIN_DAMPING = 3.5;
 
 /**
+ * Hasta qué ángulo se ve la placa del título. Más allá de 95° la pieza mira
+ * hacia atrás y su placa se vería del revés, así que se desvanece.
+ */
+const PLAQUE_FADE_FROM = 0.87; // 50°
+const PLAQUE_FADE_TO = 1.66; // 95°
+
+/** Color de la niebla: debe parecerse al fondo del contenedor. */
+const FOG_COLOR = '#eef5fc';
+
+/**
  * Configuración de cámara estable a nivel de módulo: si este objeto se creara
  * dentro del componente, React lo haría de nuevo en cada render y R3F volvería a
  * aplicar la posición inicial, pisando el encuadre calculado.
  */
 const CAMERA_CONFIG = {
-  position: [0, 1.2, 6],
-  fov: 42,
+  position: [0, 2, 5],
+  // Un fov contenido da una perspectiva más suave. Con 42° la cámara quedaba a
+  // solo 1,5 radios del anillo y las piezas se deformaban mucho.
+  fov: 32,
   near: 0.1,
-  far: 60,
+  far: 80,
 };
 
 const clamp01 = (value) => Math.min(1, Math.max(0, value));
+
+/** Lleva un ángulo al rango (-π, π] para que el giro vaya por el camino corto. */
+function shortestDelta(from, to) {
+  const delta = (to - from) % (2 * Math.PI);
+  return ((delta + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+}
 
 /* --------------------------------------------------------------- utilidades */
 
@@ -73,10 +93,31 @@ function Item({
   const group = useRef(null);
   const spinner = useRef(null);
   const glowMaterial = useRef(null);
+  const plaqueMaterial = useRef(null);
   const materials = useRef([]);
   const originalColors = useRef([]);
   const tint = useRef(target.selected ? 1 : OTHER_TINT);
   const spinFactor = useRef(0);
+
+  /**
+   * Ángulo actual de la pieza. Se interpola el ÁNGULO y de él sale la posición,
+   * no al revés: así la pieza recorre el arco del anillo en vez de cortar por
+   * dentro, y el salto de una pieza que sale por un extremo y reaparece por el
+   * otro se resuelve por el camino corto (ver shortestDelta).
+   */
+  const angle = useRef(target.angle);
+  const scale = useRef(target.selected ? SELECTED_SCALE : OTHER_SCALE);
+  const height = useRef(target.selected ? SELECTED_LIFT : 0);
+
+  // Valores iniciales fijos: los props de transformación de R3F se reaplicarían
+  // al cambiar de proyecto y pisarían la animación. Todo lo mueve useFrame.
+  const [initial] = useState(() => ({
+    x: RADIUS * Math.sin(target.angle),
+    y: target.selected ? SELECTED_LIFT : 0,
+    z: RING_DEPTH * Math.cos(target.angle),
+    rotation: target.angle,
+    scale: target.selected ? SELECTED_SCALE : OTHER_SCALE,
+  }));
 
   /**
    * Los materiales se recogen una sola vez, después de montar, para atenuar la
@@ -100,28 +141,32 @@ function Item({
     // Interpolación exponencial: independiente de los fotogramas por segundo.
     const k = reducedMotion ? 1 : 1 - Math.exp(-DAMPING * delta);
 
+    // El ángulo se acerca al objetivo por el camino corto.
+    angle.current += shortestDelta(angle.current, target.angle) * k;
+
     /**
      * Énfasis: cuán cerca está la pieza del frente. Se mide sobre su ángulo real
-     * (el de reposo más el giro del grupo), así que al arrastrar la que va
-     * llegando al centro crece de forma continua, y al soltar no hay salto:
-     * el grupo se asienta con esta misma amortiguación.
+     * (el suyo más el giro del grupo), así que al arrastrar la que va llegando al
+     * centro crece de forma continua, y al soltar no hay salto: el grupo se
+     * asienta con esta misma amortiguación.
      */
-    const worldAngle = target.angle + rotationRef.current;
+    const worldAngle = angle.current + rotationRef.current;
     const proximity = clamp01(1 - Math.abs(worldAngle) / (step || 1));
     const emphasis = proximity * proximity * (3 - 2 * proximity); // smoothstep
 
     const targetScale =
       OTHER_SCALE + (SELECTED_SCALE - OTHER_SCALE) * emphasis + (hovered ? 0.05 : 0);
-    const targetY = SELECTED_LIFT * emphasis + (hovered ? 0.05 : 0);
+    const targetHeight = SELECTED_LIFT * emphasis + (hovered ? 0.05 : 0);
     const targetTint = OTHER_TINT + (1 - OTHER_TINT) * emphasis;
 
-    node.position.x += (target.x - node.position.x) * k;
-    node.position.y += (targetY - node.position.y) * k;
-    node.position.z += (target.z - node.position.z) * k;
-    node.rotation.y += (target.angle - node.rotation.y) * k;
+    scale.current += (targetScale - scale.current) * k;
+    height.current += (targetHeight - height.current) * k;
 
-    const scale = node.scale.x + (targetScale - node.scale.x) * k;
-    node.scale.setScalar(scale);
+    node.position.x = RADIUS * Math.sin(angle.current);
+    node.position.z = RING_DEPTH * Math.cos(angle.current);
+    node.position.y = height.current;
+    node.rotation.y = angle.current;
+    node.scale.setScalar(scale.current);
 
     // El giro de la maqueta sigue al énfasis: arranca y se detiene solo.
     spinFactor.current +=
@@ -142,14 +187,23 @@ function Item({
     if (glowMaterial.current) {
       glowMaterial.current.opacity += (emphasis - glowMaterial.current.opacity) * k;
     }
+
+    // La placa se desvanece cuando la pieza gira hacia atrás: de espaldas se
+    // leería del revés.
+    if (plaqueMaterial.current) {
+      const plaque = clamp01(
+        (PLAQUE_FADE_TO - Math.abs(worldAngle)) / (PLAQUE_FADE_TO - PLAQUE_FADE_FROM)
+      );
+      plaqueMaterial.current.opacity = plaque;
+    }
   });
 
   return (
     <group
       ref={group}
-      position={[target.x, target.selected ? SELECTED_LIFT : 0, target.z]}
-      rotation-y={target.angle}
-      scale={target.selected ? SELECTED_SCALE : OTHER_SCALE}
+      position={[initial.x, initial.y, initial.z]}
+      rotation-y={initial.rotation}
+      scale={initial.scale}
     >
       {/* Halo de la maqueta que está al frente */}
       <mesh position={[0, 0.42, -0.3]} scale={[1.35, 1.35, 1]}>
@@ -181,10 +235,16 @@ function Item({
         <ProjectModel model={project.model} />
       </group>
 
-      {/* Placa con el título, siempre de cara al espectador */}
+      {/* Placa con el título */}
       <mesh position={[0, -0.37, 0.2]}>
         <planeGeometry args={[PLAQUE_WIDTH, PLAQUE_HEIGHT]} />
-        <meshBasicMaterial map={plaqueTexture} transparent toneMapped={false} />
+        <meshBasicMaterial
+          ref={plaqueMaterial}
+          map={plaqueTexture}
+          transparent
+          depthWrite={false}
+          toneMapped={false}
+        />
       </mesh>
 
       {/* Zona de clic: invisible, pero recibe el puntero en toda la pieza */}
@@ -236,7 +296,7 @@ function Turntable({ dragRef, rotationRef, children }) {
   });
 
   return (
-    <group ref={group} position={[0, 0, -RADIUS]}>
+    <group ref={group} position={[0, 0, -RING_DEPTH]}>
       {children}
     </group>
   );
@@ -244,7 +304,7 @@ function Turntable({ dragRef, rotationRef, children }) {
 
 /* ------------------------------------------------------------------- cámara */
 
-function ResponsiveCamera({ halfWidth, halfHeight, lookAtY }) {
+function ResponsiveCamera({ halfWidth, halfHeight, lookAtY, lookAtZ, fogRef }) {
   const camera = useThree((state) => state.camera);
   const size = useThree((state) => state.size);
 
@@ -261,10 +321,25 @@ function ResponsiveCamera({ halfWidth, halfHeight, lookAtY }) {
   /**
    * Se aplica en cada fotograma a propósito: con un useEffect, R3F volvía a
    * aplicar la posición inicial de la cámara y el encuadre se perdía.
+   *
+   * La cámara se sitúa en alto y mira al centro del anillo, que es lo que da la
+   * lectura de perspectiva.
    */
   useFrame(() => {
-    camera.position.set(0, 1.2, distance);
-    camera.lookAt(0, lookAtY, 0);
+    camera.position.set(
+      0,
+      lookAtY + distance * Math.sin(CAMERA_ELEVATION),
+      lookAtZ + distance * Math.cos(CAMERA_ELEVATION)
+    );
+    camera.lookAt(0, lookAtY, lookAtZ);
+
+    // La niebla se expresa en proporción a la distancia de cámara, así se adapta
+    // sola al aspecto de la pantalla: la pieza del frente queda limpia y las de
+    // atrás se atenúan hasta la mitad, sin llegar a desaparecer.
+    if (fogRef.current) {
+      fogRef.current.near = distance * 0.75;
+      fogRef.current.far = distance * 2.2;
+    }
   });
 
   return null;
@@ -275,7 +350,6 @@ function ResponsiveCamera({ halfWidth, halfHeight, lookAtY }) {
 function Scene({
   projects,
   selectedIndex,
-  narrow,
   step,
   onSelect,
   onHoverChange,
@@ -290,20 +364,20 @@ function Scene({
   // cuán cerca están del frente.
   const rotationRef = useRef(0);
 
+  // Referencia a la niebla para ajustar su alcance a la distancia de cámara.
+  const fogRef = useRef(null);
+
   const handleHover = (index) => {
     setHovered(index);
     onHoverChange?.(index !== null);
   };
 
   const targets = useMemo(
-    () => carouselTargets(projects.length, selectedIndex, narrow),
-    [projects.length, selectedIndex, narrow]
+    () => carouselTargets(projects.length, selectedIndex),
+    [projects.length, selectedIndex]
   );
 
-  const bounds = useMemo(
-    () => carouselBounds(projects.length, narrow),
-    [projects.length, narrow]
-  );
+  const bounds = useMemo(() => carouselBounds(projects.length), [projects.length]);
 
   const textures = useMemo(() => {
     const anisotropy = gl.capabilities.getMaxAnisotropy();
@@ -327,10 +401,14 @@ function Scene({
 
   return (
     <>
+      <fog ref={fogRef} attach="fog" args={[FOG_COLOR, 5, 12]} />
+
       <ResponsiveCamera
         halfWidth={bounds.halfWidth}
         halfHeight={bounds.halfHeight}
         lookAtY={bounds.lookAtY}
+        lookAtZ={bounds.lookAtZ}
+        fogRef={fogRef}
       />
 
       {/*
@@ -370,7 +448,6 @@ function Scene({
 export default function ProjectCarouselScene({
   projects,
   selectedIndex,
-  narrow = false,
   step = 0,
   onSelect,
   onHoverChange,
@@ -397,7 +474,6 @@ export default function ProjectCarouselScene({
       <Scene
         projects={projects}
         selectedIndex={selectedIndex}
-        narrow={narrow}
         step={step}
         onSelect={onSelect}
         onHoverChange={onHoverChange}

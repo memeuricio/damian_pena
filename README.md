@@ -135,10 +135,10 @@ reajustarlas.
 
 > Esta sección vive en la rama `feature/carrusel-3d-proyectos`. No está en `main`.
 
-En `/portfolio`, arriba de la grilla: una fila curva de **maquetas 3D giratorias**, una
-por proyecto, cada una con su **placa de título debajo**. La seleccionada sale al frente
-con un halo azul; las demás quedan atenuadas, más pequeñas y giradas hacia atrás. Debajo
-aparece la ficha del proyecto elegido.
+En `/portfolio`, arriba de la grilla: un **anillo de maquetas 3D giratorias**, una por
+proyecto, cada una con su **placa de título debajo**. La que está al frente sale con un
+halo azul; las demás quedan atenuadas y giradas hacia atrás, perdiéndose en la distancia.
+Debajo aparece la ficha del proyecto elegido.
 
 La mecánica está inspirada en el selector de personajes de *The Binding of Isaac*
 (todos los elementos a la vista, uno destacado, flechas a los lados), pero con el lenguaje
@@ -153,6 +153,27 @@ src/components/three/
   ProjectCarouselScene.jsx    El visor 3D
 src/components/sections/ProjectCarousel.jsx   La sección (selector + ficha + flechas)
 ```
+
+### El anillo y la profundidad
+
+Las piezas se reparten en una vuelta completa (`2π/n`), así que con 9 proyectos hay 40°
+entre cada una. La pieza del frente queda en `z = 0` y el resto rodea hacia atrás.
+
+Tres ajustes hacen que el fondo no compita con el frente:
+
+- **Niebla de three.js**, enganchada a la distancia de cámara en cada fotograma. La pieza
+  del frente queda limpia y las de atrás se atenúan hacia el color del fondo. Es el
+  equivalente barato de un desenfoque: no cuesta ningún post-proceso.
+- **La placa se desvanece** a partir de 50° y desaparece a 95°. Más allá la pieza mira
+  hacia atrás y su placa se leería del revés.
+- **El halo y la escala** solo los tiene la pieza que está al frente (ver más abajo).
+
+La profundidad del anillo está comprimida (`RING_SQUASH`): un círculo perfecto dejaba las
+piezas traseras tan lejos que se volvían motas. Con el aplastamiento se acercan sin que el
+anillo deje de leerse, porque la cámara ya lo aplasta en perspectiva.
+
+La cámara mira al **centro del anillo**, no a la pieza del frente, y el fov es contenido
+(32°) para que las piezas no se deformen.
 
 ### Las maquetas
 
@@ -211,7 +232,7 @@ amortiguación** que usan las piezas para recolocarse. Como van a la par, la pos
 resultante se mantiene continua. Si se reseteara de golpe (como estaba antes), el
 carrusel daría un tirón de una pieza entera.
 
-### Cuatro cosas que conviene no romper
+### Cinco cosas que conviene no romper
 
 1. **`carouselLayout.js` no debe importar three.js.** Lo usa también la sección, para
    saber cuánto hay que arrastrar por paso. Si importara three, la librería entraría en
@@ -226,11 +247,14 @@ carrusel daría un tirón de una pieza entera.
    restaba dos veces: las piezas quedaban 4,2 unidades más lejos y se veían la mitad
    de grandes. Costó encontrar porque el encuadre era correcto; el error estaba en la
    posición de las piezas.
-4. **El radio es grande (7,5) a propósito.** Con 9 elementos, un radio pequeño curvaba
-   tanto el abanico que las piezas de los extremos quedaban muy atrás —diminutas— y sus
-   placas casi de canto. Un radio grande deja un arco suave: todas a una profundidad
-   parecida, como en el selector de Isaac. Si añades muchos más proyectos, sube el radio
-   o el abanico se cerrará hasta solaparse.
+4. **Se interpola el ÁNGULO, no la posición.** De él sale la posición de cada pieza. Con
+   pasos de 40°, interpolar la posición directamente cortaría por dentro del anillo en vez
+   de recorrer el arco. Además hay que resolver el salto de la pieza que sale por un
+   extremo y reaparece por el otro (`shortestDelta`), o daría una vuelta de 320° en vez
+   de 40°.
+5. **Los props de transformación de R3F se reaplican.** Por eso `position`, `rotation-y` y
+   `scale` se pasan con valores iniciales fijos y todo el movimiento lo hace `useFrame`:
+   si cambiaran al cambiar de proyecto, R3F los reaplicaría y pisaría la animación.
 
 ### Sin WebGL
 

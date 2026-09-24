@@ -158,17 +158,15 @@ export default function ProjectCarousel({ projects }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [sceneReady, setSceneReady] = useState(false);
   const [hoveringPiece, setHoveringPiece] = useState(false);
-  const [narrow, setNarrow] = useState(false);
   const containerRef = useRef(null);
 
   const count = projects.length;
 
   /**
-   * El ancho decide la apertura del abanico, y el arrastre tiene que usar
-   * EXACTAMENTE el mismo paso que el layout: si no, en pantallas estrechas el
-   * giro del arrastre y el de las piezas no coinciden.
+   * Con el anillo el paso no depende del ancho: una vuelta completa reparte las
+   * piezas por igual. La sección y la escena comparten este mismo valor.
    */
-  const step = carouselStep(count, narrow);
+  const step = carouselStep(count);
 
   const countRef = useRef(count);
   const stepRef = useRef(step);
@@ -189,20 +187,6 @@ export default function ProjectCarousel({ projects }) {
   const handleSceneReady = useCallback(() => setSceneReady(true), []);
 
   const selectTo = useCallback((index) => setSelectedIndex(index), []);
-
-  /* --- medida del contenedor: decide el abanico y el paso del arrastre --- */
-  useEffect(() => {
-    const element = containerRef.current;
-    if (!element || typeof ResizeObserver === 'undefined') return;
-
-    const observer = new ResizeObserver(([entry]) => {
-      const { width, height } = entry.contentRect;
-      if (height > 0) setNarrow(width / height < 1.6);
-    });
-
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, []);
 
   /* --- solo se monta la escena cuando la sección entra en pantalla --- */
   useEffect(() => {
@@ -341,7 +325,6 @@ export default function ProjectCarousel({ projects }) {
                   <ProjectCarouselScene
                     projects={projects}
                     selectedIndex={selectedIndex}
-                    narrow={narrow}
                     step={step}
                     onSelect={selectTo}
                     onHoverChange={setHoveringPiece}
