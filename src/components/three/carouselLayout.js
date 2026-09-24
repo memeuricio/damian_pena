@@ -22,9 +22,11 @@ const MAX_STEP = 0.55;
 /** Apertura máxima del abanico. */
 const MAX_SPREAD = 0.55;
 
-/** En pantallas estrechas el abanico se cierra para que quepa todo. */
-const NARROW_STEP = 0.34;
-const NARROW_SPREAD = 0.34;
+/** En pantallas estrechas el abanico se cierra, pero no tanto como para que las
+ *  piezas se solapen: con 9 elementos hace falta algo más de una décima de radian
+ *  entre contiguas para que la peana de la seleccionada no pise a la vecina. */
+const NARROW_STEP = 0.48;
+const NARROW_SPREAD = 0.48;
 
 /** Cuántos píxeles hay que arrastrar para avanzar una pieza. */
 export const DRAG_PIXELS_PER_STEP = 110;
@@ -78,7 +80,8 @@ export function carouselTargets(count, selectedIndex, narrow = false) {
       x: RADIUS * Math.sin(angle),
       z: RADIUS * Math.cos(angle),
       y: selected ? 0.16 : 0,
-      scale: selected ? 1 : 0.75,
+      // El seleccionado mide exactamente 125% de los demás.
+      scale: selected ? 1 : 0.8,
       // Las no seleccionadas se atenúan, como en el selector de Isaac.
       opacity: selected ? 1 : 0.55,
       tint: selected ? 1 : 0.78,
@@ -99,8 +102,8 @@ export function carouselBounds(count, narrow = false) {
   const widest = targets.reduce((max, t) => Math.max(max, Math.abs(t.x)), 0);
 
   return {
-    halfWidth: widest + 0.82,
-    halfHeight: 1.15,
-    lookAtY: 0.28,
+    halfWidth: widest + 0.52,
+    halfHeight: 1.02,
+    lookAtY: 0.26,
   };
 }

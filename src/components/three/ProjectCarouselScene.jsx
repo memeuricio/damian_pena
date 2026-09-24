@@ -15,8 +15,11 @@ import { RADIUS, carouselBounds, carouselTargets } from './carouselLayout';
 /** Rapidez con la que las tarjetas alcanzan su posición. */
 const DAMPING = 9;
 
-/** Velocidad de giro de cada maqueta, en radianes por segundo. */
-const SPIN_SPEED = 0.42;
+/** Velocidad de giro de la maqueta seleccionada, en radianes por segundo. */
+const SPIN_SPEED = 0.26;
+
+/** Rapidez con la que el giro arranca y se detiene. */
+const SPIN_DAMPING = 3.5;
 
 /**
  * Configuración de cámara estable a nivel de módulo: si este objeto se creara
@@ -61,6 +64,7 @@ function Item({
   const materials = useRef([]);
   const originalColors = useRef([]);
   const tint = useRef(target.tint);
+  const spinFactor = useRef(0);
 
   /**
    * Los materiales se recogen una sola vez, después de montar, para atenuar la
@@ -95,9 +99,14 @@ function Item({
     const scale = node.scale.x + (targetScale - node.scale.x) * k;
     node.scale.setScalar(scale);
 
-    // Giro continuo de la maqueta, en desfase para que no giren todas igual.
-    if (spinner.current && !reducedMotion) {
-      spinner.current.rotation.y += SPIN_SPEED * delta;
+    // Solo gira la maqueta seleccionada. El factor se interpola para que el
+    // arranque y la parada no sean secos.
+    const spinTarget = target.selected ? 1 : 0;
+    spinFactor.current +=
+      (spinTarget - spinFactor.current) * (reducedMotion ? 1 : 1 - Math.exp(-SPIN_DAMPING * delta));
+
+    if (spinner.current) {
+      spinner.current.rotation.y += SPIN_SPEED * spinFactor.current * delta;
     }
 
     // Atenuación de las no seleccionadas
@@ -121,7 +130,7 @@ function Item({
       scale={target.scale}
     >
       {/* Halo de la maqueta seleccionada, centrado detrás de ella */}
-      <mesh position={[0, 0.5, -0.35]} scale={[1.55, 1.55, 1]}>
+      <mesh position={[0, 0.42, -0.3]} scale={[1.35, 1.35, 1]}>
         <planeGeometry args={[1, 1]} />
         <meshBasicMaterial
           ref={glowMaterial}
@@ -134,24 +143,24 @@ function Item({
       </mesh>
 
       {/* Sombra de contacto, para que la maqueta no parezca flotar */}
-      <mesh position={[0, -0.068, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={[1.25, 1.05, 1]}>
+      <mesh position={[0, -0.062, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={[1.1, 0.95, 1]}>
         <planeGeometry args={[1, 1]} />
         <meshBasicMaterial map={shadowTexture} transparent opacity={0.7} depthWrite={false} toneMapped={false} />
       </mesh>
 
       {/* Peana */}
       <mesh position={[0, -0.03, 0]} receiveShadow>
-        <boxGeometry args={[1.0, 0.06, 0.85]} />
+        <boxGeometry args={[0.9, 0.055, 0.76]} />
         <meshStandardMaterial color="#e8eef6" roughness={0.92} metalness={0} />
       </mesh>
 
       {/* Maqueta giratoria */}
-      <group ref={spinner} rotation-y={index * 0.8} scale={0.8}>
+      <group ref={spinner} rotation-y={index * 0.8} scale={0.72}>
         <ProjectModel model={project.model} />
       </group>
 
       {/* Placa con el título, siempre de cara al espectador */}
-      <mesh position={[0, -0.4, 0.22]}>
+      <mesh position={[0, -0.37, 0.2]}>
         <planeGeometry args={[PLAQUE_WIDTH, PLAQUE_HEIGHT]} />
         <meshBasicMaterial map={plaqueTexture} transparent toneMapped={false} />
       </mesh>
@@ -171,7 +180,7 @@ function Item({
         }}
         onPointerOut={() => setHovered(null)}
       >
-        <boxGeometry args={[1.3, 1.9, 1.1]} />
+        <boxGeometry args={[1.05, 1.6, 0.95]} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} colorWrite={false} />
       </mesh>
     </group>

@@ -127,7 +127,7 @@ function drawCategoryIcon(ctx, category) {
 }
 
 /* ----------------------------------------------------- placa del título */
-export const PLAQUE_WIDTH = 1.02;
+export const PLAQUE_WIDTH = 0.9;
 export const PLAQUE_HEIGHT = (PLAQUE_WIDTH * 120) / 512;
 
 /**

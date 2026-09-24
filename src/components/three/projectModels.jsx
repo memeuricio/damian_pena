@@ -114,11 +114,11 @@ function BasilicaModel() {
       <Mass size={[0.95, 0.38, 1.0]} position={[0, 0.19, 0]} />
       <GableRoof width={0.95} depth={1.0} height={0.22} y={0.38} />
 
-      {[-0.6, 0.6].map((x) => (
+      {[-0.46, 0.46].map((x) => (
         <group key={x}>
-          <Mass size={[0.24, 0.72, 0.24]} position={[x, 0.36, -0.42]} />
+          <Mass size={[0.22, 0.72, 0.22]} position={[x, 0.36, -0.42]} />
           <mesh position={[x, 0.86, -0.42]} castShadow>
-            <coneGeometry args={[0.17, 0.24, 4]} />
+            <coneGeometry args={[0.16, 0.24, 4]} />
             <meshStandardMaterial color={BODY_COLOR} roughness={0.85} />
           </mesh>
         </group>

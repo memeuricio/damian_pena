@@ -285,7 +285,7 @@ export default function ProjectCarousel({ projects }) {
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
             onPointerCancel={handlePointerUp}
-            className="relative h-[240px] sm:h-[300px] lg:h-[345px] rounded-2xl border border-surface-200 bg-gradient-to-b from-surface-100 to-sky-50 shadow-sm overflow-hidden cursor-grab active:cursor-grabbing focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500"
+            className="relative h-[215px] sm:h-[265px] lg:h-[305px] rounded-2xl border border-surface-200 bg-gradient-to-b from-surface-100 to-sky-50 shadow-sm overflow-hidden cursor-grab active:cursor-grabbing focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500"
           >
             {webglSupported && shouldLoad ? (
               <ErrorBoundary fallback={<FallbackSelector projects={projects} selectedIndex={selectedIndex} onSelect={selectTo} />}>
