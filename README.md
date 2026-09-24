@@ -59,7 +59,7 @@ src/
                          ServiceIcon, ErrorBoundary, LoadingSpinner
     layout/              Navigation, Footer, Layout, Header
     sections/            Secciones de página
-    three/               Visor 3D (datos del plano, escena y respaldo SVG)
+    three/               Visores 3D (maqueta "plano a la obra" y carrusel)
   data/mockData.js       Todo el contenido editable (perfil, proyectos, servicios)
   hooks/                 useReducedMotion
   pages/                 Una por ruta, cargadas con lazy()
@@ -135,52 +135,83 @@ reajustarlas.
 
 > Esta sección vive en la rama `feature/carrusel-3d-proyectos`. No está en `main`.
 
-En `/portfolio`, arriba de la grilla: una fila curva de tarjetas 3D donde **todos los
-proyectos están siempre visibles**, el seleccionado sale al frente con un halo azul y
-los demás quedan atenuados y girados. Abajo aparece la ficha del proyecto elegido.
+En `/portfolio`, arriba de la grilla: una fila curva de **maquetas 3D giratorias**, una
+por proyecto, cada una con su **placa de título debajo**. La seleccionada sale al frente
+con un halo azul; las demás quedan atenuadas, más pequeñas y giradas hacia atrás. Debajo
+aparece la ficha del proyecto elegido.
 
 La mecánica está inspirada en el selector de personajes de *The Binding of Isaac*
-(todos los iconos a la vista, uno destacado, flechas a los lados), pero con el lenguaje
-visual del sitio en vez del de un videojuego.
+(todos los elementos a la vista, uno destacado, flechas a los lados), pero con el lenguaje
+visual del sitio: las maquetas son volúmenes blancos con las aristas en azul, igual que la
+sección "Del plano a la obra".
 
 ```
 src/components/three/
   carouselLayout.js           Geometría del carrusel (sin three.js, ver abajo)
-  projectIcons.js             Iconos por categoría + texturas de las tarjetas
+  projectModels.jsx           Las maquetas, hechas con primitivas de three.js
+  projectIcons.js             Placas de título + iconos del respaldo sin WebGL
   ProjectCarouselScene.jsx    El visor 3D
 src/components/sections/ProjectCarousel.jsx   La sección (selector + ficha + flechas)
 ```
 
+### Las maquetas
+
+Cada proyecto elige la suya con su campo `model`:
+
+| Clave | Forma |
+|---|---|
+| `winery` | Naves abovedadas con un anexo |
+| `basilica` | Nave central, dos torres con aguja y escalinata |
+| `church` | Nave con una torre |
+| `house` | Volumen con techumbre a dos aguas y cuerpo adosado |
+| `tower` | Tres volúmenes escalonados con fajas de ventanas |
+| `warehouse` | Nave larga con lucernario y chimenea |
+| `pavilion` | Losa de cubierta sobre pilares |
+| `housing` | Tres casas de cubierta plana alrededor de un patio |
+| `lookout` | Cuerpo cilíndrico con balcones y mástil |
+
+Todas giran sobre su eje (0,42 rad/s) con un desfase distinto para que no vayan a la vez.
+Para añadir una maqueta nueva: escribe el componente en `projectModels.jsx`, añádelo al
+registro `PROJECT_MODELS` y asígnale la clave a un proyecto.
+
+### Proyectos de ejemplo
+
+El carrusel viene con los 3 proyectos reales más **6 de ejemplo** (`isTemplate: true`) para
+poder probarlo con 9 elementos. Se marcan con una etiqueta ámbar "Ejemplo" en el carrusel,
+en la ficha y en la grilla, y no aparecen en "Proyectos Destacados" de la home porque
+tienen `featured: false`.
+
+> **Antes de publicar, sustitúyelos por proyectos tuyos** y borra `isTemplate`. La marca
+> está ahí precisamente para que no se confundan con trabajo real.
+
 ### Interacción
 
-- **Arrastrar** en horizontal (ratón o dedo). Un arrastre de 110 px = una tarjeta.
+- **Arrastrar** en horizontal (ratón o dedo). Un arrastre de 110 px = una pieza.
 - **Flechas** laterales y **puntos** bajo el selector.
 - **Teclado**: ← y → cuando el selector tiene el foco.
-- Con `prefers-reduced-motion` los cambios son instantáneos, sin transición.
+- Con `prefers-reduced-motion` los cambios son instantáneos y **las maquetas no giran**.
 
-### Cambiar los iconos
-
-Los iconos son **provisionales**. Se dibujan por categoría con primitivas de canvas en
-`projectIcons.js` (`drawCategoryIcon`), así que no hace falta ningún archivo externo.
-Cuando cada proyecto tenga su propio icono, sustituye esa función por la carga de la
-imagen correspondiente: el resto del pipeline (textura, tarjeta, halo) no cambia.
-
-### Dos cosas que conviene no romper
+### Tres cosas que conviene no romper
 
 1. **`carouselLayout.js` no debe importar three.js.** Lo usa también la sección, para
    saber cuánto hay que arrastrar por paso. Si importara three, la librería entraría en
    el bundle de la página y se perdería la carga diferida.
 2. **`carouselTargets` devuelve coordenadas locales** al centro de la circunferencia.
    La escena coloca el grupo giratorio en `(0, 0, -RADIUS)`. Restar ahí el radio lo
-   restaba dos veces: las tarjetas quedaban 4,2 unidades más lejos y se veían la mitad
+   restaba dos veces: las piezas quedaban 4,2 unidades más lejos y se veían la mitad
    de grandes. Costó encontrar porque el encuadre era correcto; el error estaba en la
-   posición de las tarjetas.
+   posición de las piezas.
+3. **El radio es grande (7,5) a propósito.** Con 9 elementos, un radio pequeño curvaba
+   tanto el abanico que las piezas de los extremos quedaban muy atrás —diminutas— y sus
+   placas casi de canto. Un radio grande deja un arco suave: todas a una profundidad
+   parecida, como en el selector de Isaac. Si añades muchos más proyectos, sube el radio
+   o el abanico se cerrará hasta solaparse.
 
 ### Sin WebGL
 
-Si el navegador no puede crear el contexto 3D, se muestran las mismas tarjetas como
-imágenes (`toDataURL` del mismo lienzo) en una fila. El selector y la ficha siguen
-funcionando igual.
+Si el navegador no puede crear el contexto 3D, se muestran los iconos de cada categoría
+como imágenes (`toDataURL` del mismo lienzo que usaba la versión anterior) en una fila.
+El selector y la ficha siguen funcionando igual.
 
 ## Rutas
 
@@ -203,6 +234,12 @@ en Vercel se configura con rewrites.
 
 - **La casa del 3D es un ejemplo**, no un proyecto real. Sustituirla por uno tuyo
   (ver arriba) es la mejora que más valor añade.
+- **Los 6 proyectos de ejemplo del carrusel** (`isTemplate: true` en `mockData.js`) hay
+  que sustituirlos por proyectos reales antes de publicar. Se marcan con una etiqueta
+  "Ejemplo" justamente para que no pasen desapercibidos.
+- **Las maquetas son genéricas.** Cada proyecto usa una forma asociada a su tipo, no un
+  modelo de su edificio real. Cuando tengas modelos propios, se pueden cargar como GLTF
+  en `projectModels.jsx` en vez de construirlos con primitivas.
 - **Formulario de contacto**: `src/pages/Contact.jsx` solo simula el envío. Hay que
   conectarlo a un servicio real (Formspree, Web3Forms, EmailJS o un backend propio).
 - **CV en PDF**: en `src/components/sections/CVDownload.jsx`, define `CV_URL` con la

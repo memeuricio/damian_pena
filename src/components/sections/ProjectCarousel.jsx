@@ -60,12 +60,22 @@ function ProjectSpotlight({ project }) {
       {/* Imagen */}
       <div className="lg:col-span-2">
         <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-surface-100">
-          <OptimizedImage
-            src={primaryImage?.url}
-            alt={primaryImage?.alt || project.title}
-            className="w-full h-full object-cover"
-            fallback={<ImagePlaceholder />}
-          />
+          {primaryImage ? (
+            <OptimizedImage
+              src={primaryImage.url}
+              alt={primaryImage.alt || project.title}
+              className="w-full h-full object-cover"
+              fallback={<ImagePlaceholder />}
+            />
+          ) : (
+            /* Los proyectos de ejemplo no traen fotos */
+            <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-center">
+              <svg className="h-10 w-10 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <p className="text-sm text-primary-500">Sin imágenes todavía</p>
+            </div>
+          )}
           <span className="absolute left-3 top-3 inline-flex items-center rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-sky-700 shadow-sm">
             {getCategoryLabel(project.category)}
           </span>
@@ -74,6 +84,15 @@ function ProjectSpotlight({ project }) {
 
       {/* Información */}
       <div className="lg:col-span-3">
+        {project.isTemplate && (
+          <span className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
+            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+            </svg>
+            Proyecto de ejemplo
+          </span>
+        )}
+
         <h3 className="text-2xl sm:text-3xl font-bold text-primary-900 mb-2">
           {project.title}
         </h3>
@@ -266,7 +285,7 @@ export default function ProjectCarousel({ projects }) {
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
             onPointerCancel={handlePointerUp}
-            className="relative h-[280px] sm:h-[340px] lg:h-[400px] rounded-2xl border border-surface-200 bg-white shadow-sm overflow-hidden cursor-grab active:cursor-grabbing focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500"
+            className="relative h-[240px] sm:h-[300px] lg:h-[345px] rounded-2xl border border-surface-200 bg-gradient-to-b from-surface-100 to-sky-50 shadow-sm overflow-hidden cursor-grab active:cursor-grabbing focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500"
           >
             {webglSupported && shouldLoad ? (
               <ErrorBoundary fallback={<FallbackSelector projects={projects} selectedIndex={selectedIndex} onSelect={selectTo} />}>

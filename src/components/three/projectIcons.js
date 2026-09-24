@@ -126,7 +126,57 @@ function drawCategoryIcon(ctx, category) {
   ctx.restore();
 }
 
-/* ----------------------------------------------------------------- tarjetas */
+/* ----------------------------------------------------- placa del título */
+export const PLAQUE_WIDTH = 1.02;
+export const PLAQUE_HEIGHT = (PLAQUE_WIDTH * 120) / 512;
+
+/**
+ * Lienzo de la placa con el título que va debajo de cada maqueta.
+ *
+ * La placa es baja a propósito (512x120): así el texto ocupa una fracción mayor
+ * de su altura y sigue siendo legible cuando hay muchas piezas en el carrusel.
+ * El tamaño de letra se ajusta solo para que quepa, y si aun así no cabe, recorta.
+ */
+export function createPlaqueCanvas(project) {
+  const W = 512;
+  const H = 120;
+  const canvas = document.createElement('canvas');
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  // Placa (con margen interior para que las placas vecinas no se toquen)
+  ctx.fillStyle = '#ffffff';
+  roundRect(ctx, 22, 10, W - 44, H - 20, 22);
+  ctx.fill();
+  ctx.strokeStyle = '#e2e8f0';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Título, ajustado al ancho disponible
+  const available = W - 84;
+  let fontSize = 46;
+  let text = project.title;
+  ctx.font = `600 ${fontSize}px Inter, "Segoe UI", system-ui, sans-serif`;
+
+  while (ctx.measureText(text).width > available && fontSize > 20) {
+    fontSize -= 2;
+    ctx.font = `600 ${fontSize}px Inter, "Segoe UI", system-ui, sans-serif`;
+  }
+
+  while (ctx.measureText(text).width > available && text.length > 4) {
+    text = `${text.slice(0, -2)}…`;
+  }
+
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = INK;
+  ctx.fillText(text, W / 2, H / 2 + 2);
+
+  return canvas;
+}
+
+/* --------------------------------------------------------------- utilidades */
 
 function roundRect(ctx, x, y, width, height, radius) {
   ctx.beginPath();
@@ -167,6 +217,12 @@ function wrapText(ctx, text, maxWidth, maxLines) {
   return lines;
 }
 
+/* ------------------------------------------------------- respaldo sin WebGL */
+
+/**
+ * Tarjeta con el icono de la categoría. Solo se usa como respaldo cuando el
+ * navegador no puede dibujar WebGL.
+ */
 export const CARD_WIDTH = 1.4;
 export const CARD_HEIGHT = 1.75;
 
@@ -230,10 +286,10 @@ export function createCardCanvas(project) {
   return canvas;
 }
 
-/** Halo azul que se coloca detrás de la tarjeta seleccionada. */
+/** Halo azul que se coloca detrás de la maqueta seleccionada. */
 export const GLOW_STOPS = [
-  [0, 'rgba(37, 99, 235, 0.55)'],
-  [0.45, 'rgba(37, 99, 235, 0.20)'],
+  [0, 'rgba(37, 99, 235, 0.42)'],
+  [0.45, 'rgba(37, 99, 235, 0.16)'],
   [1, 'rgba(37, 99, 235, 0)'],
 ];
 

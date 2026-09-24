@@ -54,6 +54,12 @@ export default function ProjectCard({ project, onClick }) {
             </span>
           </div>
 
+          {project.isTemplate && (
+            <span className="mb-2 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
+              Ejemplo
+            </span>
+          )}
+
           <h3 className="text-xl font-semibold text-primary-900 mb-2 group-hover:text-sky-600 transition-colors">
             {project.title}
           </h3>

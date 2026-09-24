@@ -1,7 +1,8 @@
 // Utility functions for the application
 
-/** Devuelve la ruta del WebP equivalente a una imagen. Ver npm run images. */
-export const toWebp = (path) => path.replace(/\.(jpe?g|png)$/i, ".webp");
+/** Devuelve la ruta del WebP equivalente a una imagen. Ver pnpm images. */
+export const toWebp = (path) =>
+  typeof path === "string" ? path.replace(/\.(jpe?g|png)$/i, ".webp") : path;
 
 export const formatCurrency = (amount) => {
   return new Intl.NumberFormat('es-CL', {

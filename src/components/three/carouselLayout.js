@@ -6,29 +6,41 @@
  * arrastrar el bundle de three a la carga inicial.
  */
 
-/** Radio de la circunferencia sobre la que se colocan las tarjetas, en unidades. */
-export const RADIUS = 4.2;
+/**
+ * Radio de la circunferencia sobre la que se colocan las maquetas, en unidades.
+ *
+ * Es grande a propósito: con 9 elementos, un radio pequeño curvaba tanto el
+ * abanico que las piezas de los extremos quedaban muy atrás (diminutas) y sus
+ * placas casi de canto. Un radio grande deja un arco suave: todas las piezas a
+ * una profundidad parecida, como en el selector de Isaac.
+ */
+export const RADIUS = 7.5;
 
-/** Separación máxima entre tarjetas contiguas (radianes). */
-const MAX_STEP = 0.62;
+/** Separación máxima entre piezas contiguas (radianes). */
+const MAX_STEP = 0.55;
 
-/** Apertura máxima del abanico, para que ninguna tarjeta se vaya por detrás (radianes). */
-const MAX_SPREAD = 1.35;
+/** Apertura máxima del abanico. */
+const MAX_SPREAD = 0.55;
 
-/** Cuántos píxeles hay que arrastrar para avanzar una tarjeta. */
+/** En pantallas estrechas el abanico se cierra para que quepa todo. */
+const NARROW_STEP = 0.34;
+const NARROW_SPREAD = 0.34;
+
+/** Cuántos píxeles hay que arrastrar para avanzar una pieza. */
 export const DRAG_PIXELS_PER_STEP = 110;
 
 /** A partir de este movimiento se considera arrastre y no clic. */
 export const DRAG_THRESHOLD = 6;
 
 /**
- * Separación angular entre tarjetas. Se reduce cuando hay muchas para que todas
+ * Separación angular entre piezas. Se reduce cuando hay muchas para que todas
  * quepan dentro del abanico visible.
  */
 export function carouselStep(count, narrow = false) {
   if (count <= 1) return 0;
-  const preferred = narrow ? 0.46 : MAX_STEP;
-  return Math.min(preferred, (2 * MAX_SPREAD) / (count - 1));
+  const stepLimit = narrow ? NARROW_STEP : MAX_STEP;
+  const spreadLimit = narrow ? NARROW_SPREAD : MAX_SPREAD;
+  return Math.min(stepLimit, (2 * spreadLimit) / (count - 1));
 }
 
 /**
@@ -66,10 +78,10 @@ export function carouselTargets(count, selectedIndex, narrow = false) {
       x: RADIUS * Math.sin(angle),
       z: RADIUS * Math.cos(angle),
       y: selected ? 0.16 : 0,
-      scale: selected ? 1 : 0.84,
+      scale: selected ? 1 : 0.75,
       // Las no seleccionadas se atenúan, como en el selector de Isaac.
       opacity: selected ? 1 : 0.55,
-      tint: selected ? 1 : 0.8,
+      tint: selected ? 1 : 0.78,
       glow: selected ? 1 : 0,
       shadow: selected ? 0.9 : 0.45,
       selected,
@@ -77,14 +89,18 @@ export function carouselTargets(count, selectedIndex, narrow = false) {
   });
 }
 
-/** Media anchura y altura que la cámara debe encuadrar para que quepa todo. */
+/**
+ * Encuadre que la cámara necesita para que quepa todo.
+ * `lookAtY` es la altura a la que mira: la pieza va de la placa (abajo) a la
+ * punta de la maqueta (arriba), así que el centro óptico no está en el suelo.
+ */
 export function carouselBounds(count, narrow = false) {
   const targets = carouselTargets(count, 0, narrow);
   const widest = targets.reduce((max, t) => Math.max(max, Math.abs(t.x)), 0);
-  const cardHalfWidth = 0.72;
 
   return {
-    halfWidth: widest + cardHalfWidth + 0.25,
-    halfHeight: 1.75 / 2 + 0.45,
+    halfWidth: widest + 0.82,
+    halfHeight: 1.15,
+    lookAtY: 0.28,
   };
 }

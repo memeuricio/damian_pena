@@ -26,9 +26,13 @@ export default function OptimizedImage({
   ...props
 }) {
   const [failed, setFailed] = useState(false);
-  const webp = toWebp(src);
 
-  if (failed) return fallback;
+  // Sin origen no hay nada que intentar: se devuelve el respaldo directamente.
+  // Antes esto reventaba con "Cannot read properties of undefined" y tumbaba la
+  // página entera cuando un proyecto no tenía imágenes.
+  if (!src || failed) return fallback;
+
+  const webp = toWebp(src);
 
   return (
     <picture className="contents">

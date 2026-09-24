@@ -2,25 +2,29 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import {
-  CARD_WIDTH,
-  CARD_HEIGHT,
+  PLAQUE_HEIGHT,
+  PLAQUE_WIDTH,
   GLOW_STOPS,
   SHADOW_STOPS,
-  createCardCanvas,
+  createPlaqueCanvas,
   createRadialCanvas,
 } from './projectIcons';
+import ProjectModel from './projectModels';
 import { RADIUS, carouselBounds, carouselTargets } from './carouselLayout';
 
 /** Rapidez con la que las tarjetas alcanzan su posición. */
 const DAMPING = 9;
 
+/** Velocidad de giro de cada maqueta, en radianes por segundo. */
+const SPIN_SPEED = 0.42;
+
 /**
  * Configuración de cámara estable a nivel de módulo: si este objeto se creara
- * dentro del componente, React lo reharía en cada render, R3F volvería a aplicar
- * la posición inicial y pisaría el encuadre calculado en ResponsiveCamera.
+ * dentro del componente, React lo haría de nuevo en cada render y R3F volvería a
+ * aplicar la posición inicial, pisando el encuadre calculado.
  */
 const CAMERA_CONFIG = {
-  position: [0, 0.75, 6],
+  position: [0, 1.2, 6],
   fov: 42,
   near: 0.1,
   far: 60,
@@ -36,26 +40,52 @@ function createTexture(canvas, anisotropy) {
   return texture;
 }
 
-/* ----------------------------------------------------------------- tarjeta */
+/* -------------------------------------------------------------------- item */
 
-function Card({ texture, glowTexture, shadowTexture, target, index, onSelect, draggingRef, hovered, setHovered, reducedMotion }) {
+function Item({
+  project,
+  plaqueTexture,
+  glowTexture,
+  shadowTexture,
+  target,
+  index,
+  onSelect,
+  draggingRef,
+  hovered,
+  setHovered,
+  reducedMotion,
+}) {
   const group = useRef(null);
-  const cardMaterial = useRef(null);
+  const spinner = useRef(null);
   const glowMaterial = useRef(null);
-  const shadowMaterial = useRef(null);
+  const materials = useRef([]);
+  const originalColors = useRef([]);
+  const tint = useRef(target.tint);
+
+  /**
+   * Los materiales se recogen una sola vez, después de montar, para atenuar la
+   * maqueta sin recorrer el árbol entero en cada fotograma. Se guarda también su
+   * color original: la atenuación multiplica sobre él, así el azul de las aristas
+   * se oscurece en vez de volverse gris.
+   */
+  useEffect(() => {
+    const found = [];
+    group.current?.traverse((child) => {
+      if (child.material?.color) found.push(child.material);
+    });
+    materials.current = found;
+    originalColors.current = found.map((material) => material.color.clone());
+  }, []);
 
   useFrame((_, delta) => {
     const node = group.current;
     if (!node) return;
 
     // Interpolación exponencial: independiente de los fotogramas por segundo.
-    // Con "reducir movimiento" el factor es altísimo, así que el cambio es seco.
     const k = reducedMotion ? 1 : 1 - Math.exp(-DAMPING * delta);
 
-    // Al pasar el ratón, la tarjeta se insinúa aunque no esté seleccionada.
-    const targetScale = hovered && !target.selected ? target.scale * 1.05 : target.scale;
-    const targetOpacity = hovered ? Math.max(target.opacity, 0.82) : target.opacity;
-    const targetY = hovered && !target.selected ? target.y + 0.06 : target.y;
+    const targetScale = hovered && !target.selected ? target.scale * 1.08 : target.scale;
+    const targetY = hovered && !target.selected ? target.y + 0.08 : target.y;
 
     node.position.x += (target.x - node.position.x) * k;
     node.position.y += (targetY - node.position.y) * k;
@@ -65,16 +95,21 @@ function Card({ texture, glowTexture, shadowTexture, target, index, onSelect, dr
     const scale = node.scale.x + (targetScale - node.scale.x) * k;
     node.scale.setScalar(scale);
 
-    if (cardMaterial.current) {
-      cardMaterial.current.opacity += (targetOpacity - cardMaterial.current.opacity) * k;
-      const tint = cardMaterial.current.color.r + (target.tint - cardMaterial.current.color.r) * k;
-      cardMaterial.current.color.setScalar(tint);
+    // Giro continuo de la maqueta, en desfase para que no giren todas igual.
+    if (spinner.current && !reducedMotion) {
+      spinner.current.rotation.y += SPIN_SPEED * delta;
     }
+
+    // Atenuación de las no seleccionadas
+    tint.current += (target.tint - tint.current) * k;
+    const { current: list } = materials;
+    const { current: colors } = originalColors;
+    for (let i = 0; i < list.length; i++) {
+      list[i].color.copy(colors[i]).multiplyScalar(tint.current);
+    }
+
     if (glowMaterial.current) {
       glowMaterial.current.opacity += (target.glow - glowMaterial.current.opacity) * k;
-    }
-    if (shadowMaterial.current) {
-      shadowMaterial.current.opacity += (target.shadow - shadowMaterial.current.opacity) * k;
     }
   });
 
@@ -85,21 +120,8 @@ function Card({ texture, glowTexture, shadowTexture, target, index, onSelect, dr
       rotation-y={target.angle}
       scale={target.scale}
     >
-      {/* Sombra */}
-      <mesh position={[0, -0.12, -0.02]} scale={[CARD_WIDTH * 1.5, CARD_HEIGHT * 1.15, 1]}>
-        <planeGeometry args={[1, 1]} />
-        <meshBasicMaterial
-          ref={shadowMaterial}
-          map={shadowTexture}
-          transparent
-          opacity={0}
-          depthWrite={false}
-          toneMapped={false}
-        />
-      </mesh>
-
-      {/* Halo de la tarjeta seleccionada */}
-      <mesh position={[0, 0, -0.01]} scale={[CARD_WIDTH * 1.9, CARD_HEIGHT * 1.5, 1]}>
+      {/* Halo de la maqueta seleccionada, centrado detrás de ella */}
+      <mesh position={[0, 0.5, -0.35]} scale={[1.55, 1.55, 1]}>
         <planeGeometry args={[1, 1]} />
         <meshBasicMaterial
           ref={glowMaterial}
@@ -111,8 +133,32 @@ function Card({ texture, glowTexture, shadowTexture, target, index, onSelect, dr
         />
       </mesh>
 
-      {/* Tarjeta */}
+      {/* Sombra de contacto, para que la maqueta no parezca flotar */}
+      <mesh position={[0, -0.068, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={[1.25, 1.05, 1]}>
+        <planeGeometry args={[1, 1]} />
+        <meshBasicMaterial map={shadowTexture} transparent opacity={0.7} depthWrite={false} toneMapped={false} />
+      </mesh>
+
+      {/* Peana */}
+      <mesh position={[0, -0.03, 0]} receiveShadow>
+        <boxGeometry args={[1.0, 0.06, 0.85]} />
+        <meshStandardMaterial color="#e8eef6" roughness={0.92} metalness={0} />
+      </mesh>
+
+      {/* Maqueta giratoria */}
+      <group ref={spinner} rotation-y={index * 0.8} scale={0.8}>
+        <ProjectModel model={project.model} />
+      </group>
+
+      {/* Placa con el título, siempre de cara al espectador */}
+      <mesh position={[0, -0.4, 0.22]}>
+        <planeGeometry args={[PLAQUE_WIDTH, PLAQUE_HEIGHT]} />
+        <meshBasicMaterial map={plaqueTexture} transparent toneMapped={false} />
+      </mesh>
+
+      {/* Zona de clic: invisible, pero recibe el puntero en toda la pieza */}
       <mesh
+        position={[0, 0.35, 0]}
         onClick={(event) => {
           event.stopPropagation();
           // Si se venía arrastrando, el clic no cuenta como selección.
@@ -125,22 +171,14 @@ function Card({ texture, glowTexture, shadowTexture, target, index, onSelect, dr
         }}
         onPointerOut={() => setHovered(null)}
       >
-        <planeGeometry args={[CARD_WIDTH, CARD_HEIGHT]} />
-        {/* Sin luces a propósito: las tarjetas son interfaz, no geometría. Así el
-            color del diseño llega exacto y la escena no necesita iluminación. */}
-        <meshBasicMaterial
-          ref={cardMaterial}
-          map={texture}
-          transparent
-          opacity={0}
-          toneMapped={false}
-        />
+        <boxGeometry args={[1.3, 1.9, 1.1]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} colorWrite={false} />
       </mesh>
     </group>
   );
 }
 
-/* ------------------------------------------------------------- grupo giratorio */
+/* ----------------------------------------------------------- grupo giratorio */
 
 function Turntable({ dragRef, children }) {
   const group = useRef(null);
@@ -160,7 +198,7 @@ function Turntable({ dragRef, children }) {
 
 /* ------------------------------------------------------------------- cámara */
 
-function ResponsiveCamera({ halfWidth, halfHeight }) {
+function ResponsiveCamera({ halfWidth, halfHeight, lookAtY }) {
   const camera = useThree((state) => state.camera);
   const size = useThree((state) => state.size);
 
@@ -175,12 +213,12 @@ function ResponsiveCamera({ halfWidth, halfHeight }) {
   }, [camera.fov, size.width, size.height, halfWidth, halfHeight]);
 
   /**
-   * Se aplica en cada fotograma a propósito. Con un useEffect, R3F volvía a
-   * aplicar la posición inicial de la cámara y el encuadre calculado se perdía.
+   * Se aplica en cada fotograma a propósito: con un useEffect, R3F volvía a
+   * aplicar la posición inicial de la cámara y el encuadre se perdía.
    */
   useFrame(() => {
-    camera.position.set(0, 0.75, distance);
-    camera.lookAt(0, 0.05, 0);
+    camera.position.set(0, 1.2, distance);
+    camera.lookAt(0, lookAtY, 0);
   });
 
   return null;
@@ -208,8 +246,8 @@ function Scene({ projects, selectedIndex, onSelect, dragRef, draggingRef, reduce
   const textures = useMemo(() => {
     const anisotropy = gl.capabilities.getMaxAnisotropy();
     return {
-      cards: projects.map((project) =>
-        createTexture(createCardCanvas(project), anisotropy)
+      plaques: projects.map((project) =>
+        createTexture(createPlaqueCanvas(project), anisotropy)
       ),
       glow: createTexture(createRadialCanvas(GLOW_STOPS), anisotropy),
       shadow: createTexture(createRadialCanvas(SHADOW_STOPS), anisotropy),
@@ -218,7 +256,7 @@ function Scene({ projects, selectedIndex, onSelect, dragRef, draggingRef, reduce
 
   useEffect(
     () => () => {
-      textures.cards.forEach((texture) => texture.dispose());
+      textures.plaques.forEach((texture) => texture.dispose());
       textures.glow.dispose();
       textures.shadow.dispose();
     },
@@ -227,14 +265,29 @@ function Scene({ projects, selectedIndex, onSelect, dragRef, draggingRef, reduce
 
   return (
     <>
-      <ResponsiveCamera halfWidth={bounds.halfWidth} halfHeight={bounds.halfHeight} />
+      <ResponsiveCamera
+        halfWidth={bounds.halfWidth}
+        halfHeight={bounds.halfHeight}
+        lookAtY={bounds.lookAtY}
+      />
+
+      {/*
+        Intensidades altas a propósito: three.js aplica un factor 1/π a la luz
+        difusa, así que con valores "normales" la maqueta blanca sale gris.
+        Es la misma iluminación que la sección "Del plano a la obra".
+      */}
+      <ambientLight intensity={1} />
+      <hemisphereLight args={['#ffffff', '#dbeafe', 0.9]} />
+      <directionalLight position={[6, 12, 8]} intensity={2.8} />
+      <directionalLight position={[-8, 6, -4]} intensity={0.9} />
 
       <Turntable dragRef={dragRef}>
         {projects.map((project, index) => (
-          <Card
+          <Item
             key={project.id}
             index={index}
-            texture={textures.cards[index]}
+            project={project}
+            plaqueTexture={textures.plaques[index]}
             glowTexture={textures.glow}
             shadowTexture={textures.shadow}
             target={targets[index]}
@@ -270,6 +323,7 @@ export default function ProjectCarouselScene({
       className="scene-canvas"
       frameloop={active ? 'always' : 'never'}
       dpr={[1, 2]}
+      flat
       gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}
       camera={CAMERA_CONFIG}
     >

@@ -57,14 +57,23 @@ export const professionalProfile = {
  * `category` debe ser una de las claves de PROJECT_CATEGORIES (utils/constants.js):
  * residential | commercial | patrimonial | industrial | renovation.
  *
+ * `model` elige la maqueta 3D del carrusel. Claves disponibles en
+ * src/components/three/projectModels.jsx (PROJECT_MODELS):
+ *   winery · basilica · church · house · tower · warehouse · pavilion · housing · lookout
+ *
  * `specifications.area` es opcional: si no está, la tarjeta y el detalle simplemente
  * no muestran esa fila. Complétala cuando tengas la superficie real de cada proyecto.
+ *
+ * `isTemplate` marca los proyectos de ejemplo que rellenan el carrusel. Se muestran
+ * con una etiqueta "Ejemplo" para que no se confundan con trabajo real: **sustitúyelos
+ * por proyectos tuyos antes de publicar** y borra la marca.
  */
 export const mockProjects = [
   {
     id: "1",
     title: "Bóvedas de Vino",
     category: "commercial",
+    model: "winery",
     description: "Participé en el desarrollo de este proyecto integrando las especialidades eléctrica y estructural, colaborando con la empresa PointCloud en el levantamiento, modelamiento y coordinación técnica de las instalaciones.",
     shortDescription: "Proyecto especialidades eléctrica y estructural",
     images: [
@@ -88,6 +97,7 @@ export const mockProjects = [
     id: "2",
     title: "Proyecto Basílica de La Merced",
     category: "patrimonial",
+    model: "basilica",
     description: "Participé en la intervención de este inmueble patrimonial, desarrollando labores en el área de paisaje, integrando y levantando los distintos elementos y artefactos del entorno, además de colaborar en trabajos asociados a la fachada del proyecto.",
     shortDescription: "Intervención inmueble patrimonial",
     images: [
@@ -110,6 +120,7 @@ export const mockProjects = [
     id: "3",
     title: "Proyecto Iglesia El Buen Pastor",
     category: "patrimonial",
+    model: "church",
     description: "Participé en la elaboración y desarrollo de la fachada de la iglesia, así como en el levantamiento y modelamiento del contexto del proyecto, colaborando con la empresa PointCloud.",
     shortDescription: "Elaboración y desarrollo de la fachada de la iglesia",
     images: [
@@ -127,6 +138,107 @@ export const mockProjects = [
     },
     tags: ["patrimonial", "fachada", "levantamiento"],
     featured: true
+  },
+
+  /* ------------------------------------------------------------------------
+     Proyectos de ejemplo. Rellenan el carrusel para poder probarlo con varios
+     elementos. Sustitúyelos por proyectos reales y quita `isTemplate`.
+     ------------------------------------------------------------------------ */
+  {
+    id: "4",
+    title: "Casa Chicureo",
+    category: "residential",
+    model: "house",
+    isTemplate: true,
+    description: "Vivienda unifamiliar de dos volúmenes con cubierta a dos aguas. Incluye el desarrollo completo de planos de arquitectura, detalles constructivos y la documentación para el permiso de edificación.",
+    shortDescription: "Vivienda unifamiliar con cubierta a dos aguas",
+    images: [],
+    specifications: {
+      location: "Chicureo, Colina",
+      year: 2025
+    },
+    tags: ["residencial", "vivienda", "permiso"],
+    featured: false
+  },
+  {
+    id: "5",
+    title: "Edificio Mirador",
+    category: "commercial",
+    model: "tower",
+    isTemplate: true,
+    description: "Edificio de oficinas en tres volúmenes escalonados. Coordinación de especialidades y desarrollo de las plantas tipo, fachadas y detalles de la envolvente.",
+    shortDescription: "Oficinas en volúmenes escalonados",
+    images: [],
+    specifications: {
+      location: "Providencia, Santiago",
+      year: 2025
+    },
+    tags: ["comercial", "oficinas", "coordinación"],
+    featured: false
+  },
+  {
+    id: "6",
+    title: "Galpón Quilicura",
+    category: "industrial",
+    model: "warehouse",
+    isTemplate: true,
+    description: "Nave industrial de planta libre con lucernario central y sala de procesos anexa. Planos de plantas, cortes, estructuras y cubicaciones.",
+    shortDescription: "Nave industrial de planta libre",
+    images: [],
+    specifications: {
+      location: "Quilicura, Santiago",
+      year: 2023
+    },
+    tags: ["industrial", "nave", "estructura"],
+    featured: false
+  },
+  {
+    id: "7",
+    title: "Pabellón Ñuñoa",
+    category: "renovation",
+    model: "pavilion",
+    isTemplate: true,
+    description: "Ampliación de una vivienda existente mediante un pabellón liviano de cubierta plana. Levantamiento del estado actual e integración con la obra original.",
+    shortDescription: "Ampliación con pabellón de cubierta plana",
+    images: [],
+    specifications: {
+      location: "Ñuñoa, Santiago",
+      year: 2024
+    },
+    tags: ["remodelación", "ampliación", "levantamiento"],
+    featured: false
+  },
+  {
+    id: "8",
+    title: "Conjunto Los Aromos",
+    category: "residential",
+    model: "housing",
+    isTemplate: true,
+    description: "Conjunto de tres viviendas de cubierta plana organizadas alrededor de un patio común. Plantas, emplazamiento y documentación técnica del conjunto.",
+    shortDescription: "Tres viviendas alrededor de un patio",
+    images: [],
+    specifications: {
+      location: "Maipú, Santiago",
+      year: 2025
+    },
+    tags: ["residencial", "conjunto", "patio"],
+    featured: false
+  },
+  {
+    id: "9",
+    title: "Mirador San Cristóbal",
+    category: "commercial",
+    model: "lookout",
+    isTemplate: true,
+    description: "Mirador de dos niveles con estructura cilíndrica y balcones perimetrales. Desarrollo de planos de arquitectura y detalles de las barandas y accesos.",
+    shortDescription: "Mirador de dos niveles con balcones",
+    images: [],
+    specifications: {
+      location: "Recoleta, Santiago",
+      year: 2026
+    },
+    tags: ["comercial", "mirador", "estructura"],
+    featured: false
   }
 ];
 
