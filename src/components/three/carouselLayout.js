@@ -59,35 +59,34 @@ export function carouselOffsets(count, selectedIndex) {
   });
 }
 
+/** Escala de la pieza seleccionada frente a las demás (125%). */
+export const SELECTED_SCALE = 1;
+export const OTHER_SCALE = 0.8;
+
+/** Cuánto se eleva la pieza que está al frente. */
+export const SELECTED_LIFT = 0.16;
+
+/** Atenuación de color de las piezas no seleccionadas (1 = sin atenuar). */
+export const OTHER_TINT = 0.78;
+
 /**
- * Estado objetivo de cada tarjeta: posición, giro, escala y niveles de opacidad.
- * La escena interpola hacia estos valores fotograma a fotograma.
+ * Posición de cada pieza.
  *
- * IMPORTANTE: x e z son coordenadas LOCALES al centro de la circunferencia. La
- * escena coloca el grupo giratorio en (0, 0, -RADIUS), así que restarle RADIUS a
- * z aquí lo restaba dos veces: las tarjetas acababan 4,2 unidades más lejos y se
- * veían la mitad de grandes.
+ * Devuelve solo la geometría: el aspecto (escala, halo, atenuación, giro) lo
+ * deduce la escena a partir de cuán cerca está cada pieza del frente, para que
+ * durante el arrastre la que va llegando al centro crezca de forma continua.
  */
 export function carouselTargets(count, selectedIndex, narrow = false) {
   const step = carouselStep(count, narrow);
 
   return carouselOffsets(count, selectedIndex).map((offset) => {
     const angle = offset * step;
-    const selected = offset === 0;
 
     return {
       angle,
       x: RADIUS * Math.sin(angle),
       z: RADIUS * Math.cos(angle),
-      y: selected ? 0.16 : 0,
-      // El seleccionado mide exactamente 125% de los demás.
-      scale: selected ? 1 : 0.8,
-      // Las no seleccionadas se atenúan, como en el selector de Isaac.
-      opacity: selected ? 1 : 0.55,
-      tint: selected ? 1 : 0.78,
-      glow: selected ? 1 : 0,
-      shadow: selected ? 0.9 : 0.45,
-      selected,
+      selected: offset === 0,
     };
   });
 }

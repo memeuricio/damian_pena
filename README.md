@@ -186,22 +186,47 @@ tienen `featured: false`.
 
 ### Interacción
 
+- **Click en una maqueta** para seleccionarla. El carrusel se recoloca solo, con
+  amortiguación exponencial, así que cualquier salto (incluso de 4 puestos) se ve como
+  un giro suave.
 - **Arrastrar** en horizontal (ratón o dedo). Un arrastre de 110 px = una pieza.
+  Mientras arrastras, **la pieza que entraría al soltar crece, se ilumina y empieza a
+  girar**: el traspaso es continuo, no hay que adivinar qué se va a seleccionar.
 - **Flechas** laterales y **puntos** bajo el selector.
 - **Teclado**: ← y → cuando el selector tiene el foco.
+- Al pasar el ratón sobre una pieza, el cursor cambia a puntero.
 - Con `prefers-reduced-motion` los cambios son instantáneos y **las maquetas no giran**.
 
-### Tres cosas que conviene no romper
+### Cómo funciona el énfasis
+
+No hay un estado de "seleccionada" por pieza. Cada una calcula su **énfasis** a partir de
+su ángulo real (el de reposo más el giro del grupo): 1 cuando está en el frente, 0 cuando
+está a una pieza o más. De ahí salen la escala, el halo, la atenuación y el giro.
+
+Eso hace que el arrastre funcione solo: la pieza que va llegando al centro crece de forma
+continua sin necesidad de estado de React por fotograma.
+
+Y explica por qué al soltar no hay salto: el giro del grupo se asienta con **la misma
+amortiguación** que usan las piezas para recolocarse. Como van a la par, la posición
+resultante se mantiene continua. Si se reseteara de golpe (como estaba antes), el
+carrusel daría un tirón de una pieza entera.
+
+### Cuatro cosas que conviene no romper
 
 1. **`carouselLayout.js` no debe importar three.js.** Lo usa también la sección, para
    saber cuánto hay que arrastrar por paso. Si importara three, la librería entraría en
    el bundle de la página y se perdería la carga diferida.
-2. **`carouselTargets` devuelve coordenadas locales** al centro de la circunferencia.
+2. **El arrastre no usa `setPointerCapture`.** Los escuchas van en `window` a propósito:
+   al capturar el puntero, el evento `click` se entrega al contenedor y el visor 3D nunca
+   recibe el click sobre una pieza. Es el mismo fallo que ya hubo con las flechas y los
+   puntos. Si alguna vez hace falta capturar el puntero, hay que resolver antes cómo
+   llega el click al canvas.
+3. **`carouselTargets` devuelve coordenadas locales** al centro de la circunferencia.
    La escena coloca el grupo giratorio en `(0, 0, -RADIUS)`. Restar ahí el radio lo
    restaba dos veces: las piezas quedaban 4,2 unidades más lejos y se veían la mitad
    de grandes. Costó encontrar porque el encuadre era correcto; el error estaba en la
    posición de las piezas.
-3. **El radio es grande (7,5) a propósito.** Con 9 elementos, un radio pequeño curvaba
+4. **El radio es grande (7,5) a propósito.** Con 9 elementos, un radio pequeño curvaba
    tanto el abanico que las piezas de los extremos quedaban muy atrás —diminutas— y sus
    placas casi de canto. Un radio grande deja un arco suave: todas a una profundidad
    parecida, como en el selector de Isaac. Si añades muchos más proyectos, sube el radio

@@ -17,7 +17,7 @@ const ProjectCarouselScene = lazy(() => import('../three/ProjectCarouselScene'))
 /* --------------------------------------------------------------- respaldo */
 
 /**
- * Selector sin WebGL: las mismas tarjetas, generadas como imagen desde el mismo
+ * Selector sin WebGL: las mismas piezas, generadas como imagen desde el mismo
  * lienzo que usa la escena 3D.
  */
 function FallbackSelector({ projects, selectedIndex, onSelect }) {
@@ -157,31 +157,52 @@ export default function ProjectCarousel({ projects }) {
   const [isVisible, setIsVisible] = useState(() => typeof IntersectionObserver === 'undefined');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [sceneReady, setSceneReady] = useState(false);
+  const [hoveringPiece, setHoveringPiece] = useState(false);
+  const [narrow, setNarrow] = useState(false);
   const containerRef = useRef(null);
 
-  // El arrastre se lleva en refs: cambia en cada pointermove y no debe provocar
-  // un render de React por fotograma.
-  const dragRef = useRef(0);
+  const count = projects.length;
+
+  /**
+   * El ancho decide la apertura del abanico, y el arrastre tiene que usar
+   * EXACTAMENTE el mismo paso que el layout: si no, en pantallas estrechas el
+   * giro del arrastre y el de las piezas no coinciden.
+   */
+  const step = carouselStep(count, narrow);
+
+  const countRef = useRef(count);
+  const stepRef = useRef(step);
+  useEffect(() => {
+    countRef.current = count;
+    stepRef.current = step;
+  }, [count, step]);
+
+  /**
+   * Giro del grupo. `null` significa "asentándose": Turntable lo lleva a cero con
+   * la misma amortiguación que las piezas, así al soltar no hay salto.
+   */
+  const dragRotationRef = useRef(null);
   const draggingRef = useRef(false);
   const startXRef = useRef(0);
   const pointerIdRef = useRef(null);
 
-  const count = projects.length;
-  const step = carouselStep(count, false);
-
   const handleSceneReady = useCallback(() => setSceneReady(true), []);
 
-  const selectBy = useCallback(
-    (delta) => {
-      setSelectedIndex((current) => {
-        if (count === 0) return 0;
-        return ((current + delta) % count + count) % count;
-      });
-    },
-    [count]
-  );
-
   const selectTo = useCallback((index) => setSelectedIndex(index), []);
+
+  /* --- medida del contenedor: decide el abanico y el paso del arrastre --- */
+  useEffect(() => {
+    const element = containerRef.current;
+    if (!element || typeof ResizeObserver === 'undefined') return;
+
+    const observer = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect;
+      if (height > 0) setNarrow(width / height < 1.6);
+    });
+
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
 
   /* --- solo se monta la escena cuando la sección entra en pantalla --- */
   useEffect(() => {
@@ -200,56 +221,78 @@ export default function ProjectCarousel({ projects }) {
     return () => observer.disconnect();
   }, []);
 
-  /* --- arrastre horizontal --- */
+  /**
+   * Arrastre horizontal.
+   *
+   * Los escuchas van en `window` en vez de usar setPointerCapture a propósito:
+   * al capturar el puntero, el evento `click` se entrega al contenedor y el visor
+   * 3D nunca se entera de que le han pulsado una pieza. Además así el arrastre
+   * sigue funcionando aunque el puntero salga del recuadro.
+   */
   const handlePointerDown = (event) => {
     if (event.pointerType === 'mouse' && event.button !== 0) return;
 
-    // Si el puntero cae sobre un botón (las flechas, los puntos) no se inicia
-    // arrastre: capturar el puntero aquí le robaría el clic a ese botón.
+    // Sobre un botón (las flechas, los puntos) no se inicia arrastre.
     if (event.target.closest?.('button, a, input, select, textarea, [data-no-drag]')) return;
 
     pointerIdRef.current = event.pointerId;
     startXRef.current = event.clientX;
     draggingRef.current = false;
-    event.currentTarget.setPointerCapture?.(event.pointerId);
   };
 
-  const handlePointerMove = (event) => {
-    if (pointerIdRef.current !== event.pointerId) return;
+  useEffect(() => {
+    const handleMove = (event) => {
+      if (pointerIdRef.current !== event.pointerId) return;
 
-    const dx = event.clientX - startXRef.current;
-    if (Math.abs(dx) > DRAG_THRESHOLD) draggingRef.current = true;
-    if (!draggingRef.current) return;
+      const dx = event.clientX - startXRef.current;
+      if (Math.abs(dx) > DRAG_THRESHOLD) draggingRef.current = true;
+      if (!draggingRef.current) return;
 
-    // El giro acompaña al dedo exactamente los mismos radianes que un paso.
-    dragRef.current = (dx / DRAG_PIXELS_PER_STEP) * step;
-  };
+      dragRotationRef.current = (dx / DRAG_PIXELS_PER_STEP) * stepRef.current;
+    };
 
-  const handlePointerUp = (event) => {
-    if (pointerIdRef.current !== event.pointerId) return;
+    const handleUp = (event) => {
+      if (pointerIdRef.current !== event.pointerId) return;
 
-    const dx = event.clientX - startXRef.current;
-    const steps = Math.round(dx / DRAG_PIXELS_PER_STEP);
+      const dx = event.clientX - startXRef.current;
+      const steps = Math.round(dx / DRAG_PIXELS_PER_STEP);
 
-    pointerIdRef.current = null;
-    dragRef.current = 0;
+      pointerIdRef.current = null;
+      dragRotationRef.current = null; // el grupo se asienta
 
-    // Arrastrar hacia la derecha trae la tarjeta anterior.
-    if (Math.abs(steps) >= 1) selectBy(-steps);
+      // Arrastrar hacia la derecha trae la pieza anterior.
+      if (Math.abs(steps) >= 1) {
+        setSelectedIndex((current) => {
+          const total = countRef.current;
+          if (!total) return 0;
+          return (((current - steps) % total) + total) % total;
+        });
+      }
 
-    // Se libera después del clic sintético, para que un arrastre no seleccione.
-    window.setTimeout(() => {
-      draggingRef.current = false;
-    }, 0);
-  };
+      // Se libera después del clic sintético, para que un arrastre no seleccione.
+      window.setTimeout(() => {
+        draggingRef.current = false;
+      }, 0);
+    };
+
+    window.addEventListener('pointermove', handleMove);
+    window.addEventListener('pointerup', handleUp);
+    window.addEventListener('pointercancel', handleUp);
+
+    return () => {
+      window.removeEventListener('pointermove', handleMove);
+      window.removeEventListener('pointerup', handleUp);
+      window.removeEventListener('pointercancel', handleUp);
+    };
+  }, []);
 
   const handleKeyDown = (event) => {
     if (event.key === 'ArrowLeft') {
       event.preventDefault();
-      selectBy(-1);
+      setSelectedIndex((current) => ((current - 1) % count + count) % count);
     } else if (event.key === 'ArrowRight') {
       event.preventDefault();
-      selectBy(1);
+      setSelectedIndex((current) => ((current + 1) % count + count) % count);
     }
   };
 
@@ -268,8 +311,8 @@ export default function ProjectCarousel({ projects }) {
             Explora los proyectos
           </h2>
           <p className="text-lg text-primary-600 max-w-2xl mx-auto">
-            Arrastra o usa las flechas para recorrer los proyectos. Abajo verás el
-            detalle del que tengas seleccionado.
+            Toca una maqueta para ver su ficha, o arrastra para recorrer el carrusel.
+            Abajo verás el detalle del proyecto seleccionado.
           </p>
         </div>
 
@@ -282,10 +325,9 @@ export default function ProjectCarousel({ projects }) {
             tabIndex={0}
             onKeyDown={handleKeyDown}
             onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerUp}
-            onPointerCancel={handlePointerUp}
-            className="relative h-[215px] sm:h-[265px] lg:h-[305px] rounded-2xl border border-surface-200 bg-gradient-to-b from-surface-100 to-sky-50 shadow-sm overflow-hidden cursor-grab active:cursor-grabbing focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500"
+            className={`relative h-[215px] sm:h-[265px] lg:h-[305px] rounded-2xl border border-surface-200 bg-gradient-to-b from-surface-100 to-sky-50 shadow-sm overflow-hidden active:cursor-grabbing focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500 ${
+              hoveringPiece ? 'cursor-pointer' : 'cursor-grab'
+            }`}
           >
             {webglSupported && shouldLoad ? (
               <ErrorBoundary fallback={<FallbackSelector projects={projects} selectedIndex={selectedIndex} onSelect={selectTo} />}>
@@ -299,10 +341,13 @@ export default function ProjectCarousel({ projects }) {
                   <ProjectCarouselScene
                     projects={projects}
                     selectedIndex={selectedIndex}
+                    narrow={narrow}
+                    step={step}
                     onSelect={selectTo}
+                    onHoverChange={setHoveringPiece}
                     active={isVisible}
                     reducedMotion={reducedMotion}
-                    dragRef={dragRef}
+                    dragRef={dragRotationRef}
                     draggingRef={draggingRef}
                     onReady={handleSceneReady}
                   />
@@ -315,7 +360,7 @@ export default function ProjectCarousel({ projects }) {
             {/* Flechas, al estilo del selector de Isaac */}
             <button
               type="button"
-              onClick={() => selectBy(-1)}
+              onClick={() => setSelectedIndex((current) => ((current - 1) % count + count) % count)}
               aria-label="Proyecto anterior"
               className="absolute left-3 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full border border-surface-200 bg-white/90 text-primary-600 shadow-sm transition-colors hover:text-accent-600 hover:border-accent-200"
             >
@@ -325,7 +370,7 @@ export default function ProjectCarousel({ projects }) {
             </button>
             <button
               type="button"
-              onClick={() => selectBy(1)}
+              onClick={() => setSelectedIndex((current) => ((current + 1) % count + count) % count)}
               aria-label="Proyecto siguiente"
               className="absolute right-3 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full border border-surface-200 bg-white/90 text-primary-600 shadow-sm transition-colors hover:text-accent-600 hover:border-accent-200"
             >
@@ -360,7 +405,7 @@ export default function ProjectCarousel({ projects }) {
 
           {!reducedMotion && sceneReady && (
             <p className="mt-3 text-center text-xs text-primary-400">
-              {projects.length} proyectos · arrastra para girar
+              {projects.length} proyectos · toca una maqueta o arrastra para girar
             </p>
           )}
         </div>

@@ -10,12 +10,20 @@ import {
   createRadialCanvas,
 } from './projectIcons';
 import ProjectModel from './projectModels';
-import { RADIUS, carouselBounds, carouselTargets } from './carouselLayout';
+import {
+  OTHER_SCALE,
+  OTHER_TINT,
+  RADIUS,
+  SELECTED_LIFT,
+  SELECTED_SCALE,
+  carouselBounds,
+  carouselTargets,
+} from './carouselLayout';
 
-/** Rapidez con la que las tarjetas alcanzan su posición. */
+/** Rapidez con la que las piezas alcanzan su posición. */
 const DAMPING = 9;
 
-/** Velocidad de giro de la maqueta seleccionada, en radianes por segundo. */
+/** Velocidad de giro de la maqueta que está al frente, en radianes por segundo. */
 const SPIN_SPEED = 0.26;
 
 /** Rapidez con la que el giro arranca y se detiene. */
@@ -32,6 +40,8 @@ const CAMERA_CONFIG = {
   near: 0.1,
   far: 60,
 };
+
+const clamp01 = (value) => Math.min(1, Math.max(0, value));
 
 /* --------------------------------------------------------------- utilidades */
 
@@ -51,6 +61,8 @@ function Item({
   glowTexture,
   shadowTexture,
   target,
+  step,
+  rotationRef,
   index,
   onSelect,
   draggingRef,
@@ -63,7 +75,7 @@ function Item({
   const glowMaterial = useRef(null);
   const materials = useRef([]);
   const originalColors = useRef([]);
-  const tint = useRef(target.tint);
+  const tint = useRef(target.selected ? 1 : OTHER_TINT);
   const spinFactor = useRef(0);
 
   /**
@@ -88,8 +100,20 @@ function Item({
     // Interpolación exponencial: independiente de los fotogramas por segundo.
     const k = reducedMotion ? 1 : 1 - Math.exp(-DAMPING * delta);
 
-    const targetScale = hovered && !target.selected ? target.scale * 1.08 : target.scale;
-    const targetY = hovered && !target.selected ? target.y + 0.08 : target.y;
+    /**
+     * Énfasis: cuán cerca está la pieza del frente. Se mide sobre su ángulo real
+     * (el de reposo más el giro del grupo), así que al arrastrar la que va
+     * llegando al centro crece de forma continua, y al soltar no hay salto:
+     * el grupo se asienta con esta misma amortiguación.
+     */
+    const worldAngle = target.angle + rotationRef.current;
+    const proximity = clamp01(1 - Math.abs(worldAngle) / (step || 1));
+    const emphasis = proximity * proximity * (3 - 2 * proximity); // smoothstep
+
+    const targetScale =
+      OTHER_SCALE + (SELECTED_SCALE - OTHER_SCALE) * emphasis + (hovered ? 0.05 : 0);
+    const targetY = SELECTED_LIFT * emphasis + (hovered ? 0.05 : 0);
+    const targetTint = OTHER_TINT + (1 - OTHER_TINT) * emphasis;
 
     node.position.x += (target.x - node.position.x) * k;
     node.position.y += (targetY - node.position.y) * k;
@@ -99,18 +123,16 @@ function Item({
     const scale = node.scale.x + (targetScale - node.scale.x) * k;
     node.scale.setScalar(scale);
 
-    // Solo gira la maqueta seleccionada. El factor se interpola para que el
-    // arranque y la parada no sean secos.
-    const spinTarget = target.selected ? 1 : 0;
+    // El giro de la maqueta sigue al énfasis: arranca y se detiene solo.
     spinFactor.current +=
-      (spinTarget - spinFactor.current) * (reducedMotion ? 1 : 1 - Math.exp(-SPIN_DAMPING * delta));
+      (emphasis - spinFactor.current) * (reducedMotion ? 1 : 1 - Math.exp(-SPIN_DAMPING * delta));
 
     if (spinner.current) {
       spinner.current.rotation.y += SPIN_SPEED * spinFactor.current * delta;
     }
 
-    // Atenuación de las no seleccionadas
-    tint.current += (target.tint - tint.current) * k;
+    // Atenuación de las piezas que no están al frente
+    tint.current += (targetTint - tint.current) * k;
     const { current: list } = materials;
     const { current: colors } = originalColors;
     for (let i = 0; i < list.length; i++) {
@@ -118,18 +140,18 @@ function Item({
     }
 
     if (glowMaterial.current) {
-      glowMaterial.current.opacity += (target.glow - glowMaterial.current.opacity) * k;
+      glowMaterial.current.opacity += (emphasis - glowMaterial.current.opacity) * k;
     }
   });
 
   return (
     <group
       ref={group}
-      position={[target.x, target.y, target.z]}
+      position={[target.x, target.selected ? SELECTED_LIFT : 0, target.z]}
       rotation-y={target.angle}
-      scale={target.scale}
+      scale={target.selected ? SELECTED_SCALE : OTHER_SCALE}
     >
-      {/* Halo de la maqueta seleccionada, centrado detrás de ella */}
+      {/* Halo de la maqueta que está al frente */}
       <mesh position={[0, 0.42, -0.3]} scale={[1.35, 1.35, 1]}>
         <planeGeometry args={[1, 1]} />
         <meshBasicMaterial
@@ -189,13 +211,28 @@ function Item({
 
 /* ----------------------------------------------------------- grupo giratorio */
 
-function Turntable({ dragRef, children }) {
+function Turntable({ dragRef, rotationRef, children }) {
   const group = useRef(null);
 
-  useFrame(() => {
+  useFrame((_, delta) => {
     if (!group.current) return;
-    // El grupo gira sobre el centro de la circunferencia, que está en (0, 0, -RADIUS).
-    group.current.rotation.y = dragRef.current ?? 0;
+
+    const live = dragRef.current;
+
+    if (live === null || live === undefined) {
+      /**
+       * Al soltar, el giro no se resetea de golpe: se asienta con la MISMA
+       * amortiguación que usan las piezas para recolocarse. Como ambos van a la
+       * par, la posición resultante se mantiene continua y no hay salto.
+       */
+      const k = 1 - Math.exp(-DAMPING * delta);
+      rotationRef.current += (0 - rotationRef.current) * k;
+    } else {
+      // Durante el arrastre sigue al puntero 1:1, sin retardo.
+      rotationRef.current = live;
+    }
+
+    group.current.rotation.y = rotationRef.current;
   });
 
   return (
@@ -235,12 +272,28 @@ function ResponsiveCamera({ halfWidth, halfHeight, lookAtY }) {
 
 /* -------------------------------------------------------------------- escena */
 
-function Scene({ projects, selectedIndex, onSelect, dragRef, draggingRef, reducedMotion }) {
-  const size = useThree((state) => state.size);
+function Scene({
+  projects,
+  selectedIndex,
+  narrow,
+  step,
+  onSelect,
+  onHoverChange,
+  dragRef,
+  draggingRef,
+  reducedMotion,
+}) {
   const gl = useThree((state) => state.gl);
   const [hovered, setHovered] = useState(null);
 
-  const narrow = size.width / size.height < 1.6;
+  // Giro real del grupo: lo escribe Turntable y lo leen las piezas para saber
+  // cuán cerca están del frente.
+  const rotationRef = useRef(0);
+
+  const handleHover = (index) => {
+    setHovered(index);
+    onHoverChange?.(index !== null);
+  };
 
   const targets = useMemo(
     () => carouselTargets(projects.length, selectedIndex, narrow),
@@ -290,7 +343,7 @@ function Scene({ projects, selectedIndex, onSelect, dragRef, draggingRef, reduce
       <directionalLight position={[6, 12, 8]} intensity={2.8} />
       <directionalLight position={[-8, 6, -4]} intensity={0.9} />
 
-      <Turntable dragRef={dragRef}>
+      <Turntable dragRef={dragRef} rotationRef={rotationRef}>
         {projects.map((project, index) => (
           <Item
             key={project.id}
@@ -300,10 +353,12 @@ function Scene({ projects, selectedIndex, onSelect, dragRef, draggingRef, reduce
             glowTexture={textures.glow}
             shadowTexture={textures.shadow}
             target={targets[index]}
+            step={step}
+            rotationRef={rotationRef}
             onSelect={onSelect}
             draggingRef={draggingRef}
             hovered={hovered === index}
-            setHovered={setHovered}
+            setHovered={handleHover}
             reducedMotion={reducedMotion}
           />
         ))}
@@ -315,7 +370,10 @@ function Scene({ projects, selectedIndex, onSelect, dragRef, draggingRef, reduce
 export default function ProjectCarouselScene({
   projects,
   selectedIndex,
+  narrow = false,
+  step = 0,
   onSelect,
+  onHoverChange,
   active = true,
   reducedMotion = false,
   dragRef,
@@ -339,7 +397,10 @@ export default function ProjectCarouselScene({
       <Scene
         projects={projects}
         selectedIndex={selectedIndex}
+        narrow={narrow}
+        step={step}
         onSelect={onSelect}
+        onHoverChange={onHoverChange}
         dragRef={dragRef}
         draggingRef={draggingRef}
         reducedMotion={reducedMotion}
