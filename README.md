@@ -131,6 +131,57 @@ three.js aplica un factor **1/π** a la luz difusa, así que con valores "normal
 (1-2) la maqueta blanca se ve gris. Si cambias de `flat` a tone mapping ACES, hay que
 reajustarlas.
 
+## El carrusel 3D de proyectos (rama experimental)
+
+> Esta sección vive en la rama `feature/carrusel-3d-proyectos`. No está en `main`.
+
+En `/portfolio`, arriba de la grilla: una fila curva de tarjetas 3D donde **todos los
+proyectos están siempre visibles**, el seleccionado sale al frente con un halo azul y
+los demás quedan atenuados y girados. Abajo aparece la ficha del proyecto elegido.
+
+La mecánica está inspirada en el selector de personajes de *The Binding of Isaac*
+(todos los iconos a la vista, uno destacado, flechas a los lados), pero con el lenguaje
+visual del sitio en vez del de un videojuego.
+
+```
+src/components/three/
+  carouselLayout.js           Geometría del carrusel (sin three.js, ver abajo)
+  projectIcons.js             Iconos por categoría + texturas de las tarjetas
+  ProjectCarouselScene.jsx    El visor 3D
+src/components/sections/ProjectCarousel.jsx   La sección (selector + ficha + flechas)
+```
+
+### Interacción
+
+- **Arrastrar** en horizontal (ratón o dedo). Un arrastre de 110 px = una tarjeta.
+- **Flechas** laterales y **puntos** bajo el selector.
+- **Teclado**: ← y → cuando el selector tiene el foco.
+- Con `prefers-reduced-motion` los cambios son instantáneos, sin transición.
+
+### Cambiar los iconos
+
+Los iconos son **provisionales**. Se dibujan por categoría con primitivas de canvas en
+`projectIcons.js` (`drawCategoryIcon`), así que no hace falta ningún archivo externo.
+Cuando cada proyecto tenga su propio icono, sustituye esa función por la carga de la
+imagen correspondiente: el resto del pipeline (textura, tarjeta, halo) no cambia.
+
+### Dos cosas que conviene no romper
+
+1. **`carouselLayout.js` no debe importar three.js.** Lo usa también la sección, para
+   saber cuánto hay que arrastrar por paso. Si importara three, la librería entraría en
+   el bundle de la página y se perdería la carga diferida.
+2. **`carouselTargets` devuelve coordenadas locales** al centro de la circunferencia.
+   La escena coloca el grupo giratorio en `(0, 0, -RADIUS)`. Restar ahí el radio lo
+   restaba dos veces: las tarjetas quedaban 4,2 unidades más lejos y se veían la mitad
+   de grandes. Costó encontrar porque el encuadre era correcto; el error estaba en la
+   posición de las tarjetas.
+
+### Sin WebGL
+
+Si el navegador no puede crear el contexto 3D, se muestran las mismas tarjetas como
+imágenes (`toDataURL` del mismo lienzo) en una fila. El selector y la ficha siguen
+funcionando igual.
+
 ## Rutas
 
 | Ruta | Página |

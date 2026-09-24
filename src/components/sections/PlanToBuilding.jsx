@@ -5,6 +5,7 @@ import ErrorBoundary from '../common/ErrorBoundary';
 import PlanSvg from '../three/PlanSvg';
 import { PLAN } from '../three/housePlan';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
+import { detectWebGL } from '../../utils/webgl';
 import { ROUTES } from '../../utils/constants';
 
 // El visor 3D va en su propio chunk: three.js no entra en la carga inicial.
@@ -28,20 +29,6 @@ const PROCESS_STEPS = [
     description: 'Armo la carpeta completa con todo lo que exige la municipalidad para el permiso.',
   },
 ];
-
-/** Comprueba si el navegador puede dibujar WebGL, sin dejar el contexto abierto. */
-function detectWebGL() {
-  if (typeof window === 'undefined') return false;
-
-  try {
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('webgl2') || canvas.getContext('webgl');
-    context?.getExtension('WEBGL_lose_context')?.loseContext();
-    return Boolean(context);
-  } catch {
-    return false;
-  }
-}
 
 function StaticPlan() {
   return (

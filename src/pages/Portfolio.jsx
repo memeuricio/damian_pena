@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Header from '../components/layout/Header';
+import ProjectCarousel from '../components/sections/ProjectCarousel';
 import ProjectGrid from '../components/sections/ProjectGrid';
 import ProjectDetail from '../components/sections/ProjectDetail';
 import { mockProjects } from '../data/mockData';
@@ -48,8 +49,14 @@ export default function Portfolio() {
         subtitle="Explora mis proyectos arquitectónicos más destacados"
         className="bg-surface-50"
       />
-      
+
+      {/* Selector 3D: es la vía principal para recorrer los proyectos */}
+      <ProjectCarousel projects={mockProjects} />
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <h2 className="text-2xl sm:text-3xl font-bold text-primary-900 mb-8 text-center">
+          Todos los proyectos
+        </h2>
         <ProjectGrid onProjectClick={handleProjectClick} />
       </div>
 
