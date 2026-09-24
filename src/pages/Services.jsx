@@ -1,20 +1,31 @@
-import { useState } from 'react';
+import { useMemo } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Header from '../components/layout/Header';
 import ServicesCatalog from '../components/sections/ServicesCatalog';
 import ServiceDetail from '../components/sections/ServiceDetail';
+import { mockServices } from '../data/mockData';
+import { ROUTES } from '../utils/constants';
 
+/**
+ * Abre el detalle del servicio indicado en el hash (/services#2).
+ * Es lo que hace funcionar los enlaces "Ver servicios" de la home y del footer.
+ */
 export default function Services() {
-  const [selectedService, setSelectedService] = useState(null);
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const selectedService = useMemo(() => {
+    const id = location.hash.replace('#', '');
+    if (!id) return null;
+    return mockServices.find((service) => service.id === id) ?? null;
+  }, [location.hash]);
 
   const handleServiceSelect = (service) => {
-    setSelectedService(service);
-    setIsDetailOpen(true);
+    navigate(`${ROUTES.SERVICES}#${service.id}`);
   };
 
   const handleCloseDetail = () => {
-    setIsDetailOpen(false);
-    setSelectedService(null);
+    navigate(ROUTES.SERVICES, { replace: true });
   };
 
   return (
@@ -31,7 +42,7 @@ export default function Services() {
 
       <ServiceDetail
         service={selectedService}
-        isOpen={isDetailOpen}
+        isOpen={Boolean(selectedService)}
         onClose={handleCloseDetail}
       />
     </div>

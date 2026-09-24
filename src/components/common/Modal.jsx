@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
 export default function Modal({ 
@@ -9,32 +9,31 @@ export default function Modal({
   size = 'md',
   className = '' 
 }) {
+  const panelRef = useRef(null);
+
+  // Bloquea el scroll del body mientras el modal está abierto y restaura el
+  // valor anterior al cerrarlo (antes lo dejaba en 'unset' y pisaba el original).
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    
+    if (!isOpen) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = previous;
     };
   }, [isOpen]);
 
+  // Escape para cerrar + foco inicial dentro del panel.
   useEffect(() => {
+    if (!isOpen) return;
+
     const handleEscape = (e) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
+      if (e.key === 'Escape') onClose?.();
     };
 
-    if (isOpen) {
-      document.addEventListener('keydown', handleEscape);
-    }
+    document.addEventListener('keydown', handleEscape);
+    panelRef.current?.focus();
 
-    return () => {
-      document.removeEventListener('keydown', handleEscape);
-    };
+    return () => document.removeEventListener('keydown', handleEscape);
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
@@ -51,12 +50,22 @@ export default function Modal({
       <div className="flex min-h-screen items-center justify-center p-4">
         {/* Backdrop */}
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+          className="fixed inset-0 bg-black/50 transition-opacity"
           onClick={onClose}
+          aria-hidden="true"
         />
         
         {/* Modal */}
-        <div className={`relative w-full ${sizeClasses[size]} transform rounded-lg bg-white shadow-xl transition-all ${className}`}>
+        {/* Sin `transform` a propósito: crea un containing block y rompería el
+            position:fixed de la imagen ampliada en ProjectDetail. */}
+        <div
+          ref={panelRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label={title}
+          tabIndex={-1}
+          className={`relative w-full ${sizeClasses[size]} rounded-lg bg-white shadow-xl transition-all outline-none ${className}`}
+        >
           {/* Header */}
           {title && (
             <div className="flex items-center justify-between border-b border-surface-200 px-6 py-4">
@@ -64,8 +73,10 @@ export default function Modal({
                 {title}
               </h3>
               <button
+                type="button"
                 onClick={onClose}
-                className="rounded-lg p-1 text-primary-400 hover:bg-surface-100 hover:text-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                aria-label="Cerrar"
+                className="rounded-lg p-1 text-primary-400 hover:bg-surface-100 hover:text-primary-600"
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

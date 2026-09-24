@@ -1,0 +1,9 @@
+# Configuración de pnpm.
+#
+# pnpm 12 verifica por defecto que las dependencias lleven un tiempo mínimo
+# publicadas (protección contra ataques de cadena de suministro). Como three y
+# vite se pidieron explícitamente en su última versión, pnpm dejó registradas
+# aquí esas dos excepciones.
+minimumReleaseAgeExclude:
+  - three@0.186.1
+  - vite@8.3.1

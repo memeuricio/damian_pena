@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { memo } from 'react';
 import Button from '../common/Button';
+import OptimizedImage from '../common/OptimizedImage';
 import { ROUTES } from '../../utils/constants';
 
 const Hero = memo(function Hero() {
@@ -8,19 +9,20 @@ const Hero = memo(function Hero() {
     <>
       {/* Main Hero Section with Background */}
       <section className="relative bg-gradient-to-br from-sky-50 via-surface-50 to-emerald-50 overflow-hidden">
-        {/* Background Image - Always present */}
-        <div 
-          className="absolute inset-0 overflow-hidden pointer-events-none opacity-20"
-          style={{
-            backgroundImage: 'url(/bg2.jpeg)',
-            backgroundRepeat: 'no-repeat',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            willChange: 'transform'
-          }}
+        {/*
+          Fondo decorativo al 20% de opacidad. Antes era un div con background-image
+          de 16 MB y will-change:transform, lo que mantenía un layer de ~390 MB en GPU.
+          Ahora es un <picture> de 126 KB sin promoción de layer.
+        */}
+        <OptimizedImage
+          src="/bg2.jpg"
+          alt=""
+          loading="eager"
+          fetchPriority="low"
+          className="absolute inset-0 h-full w-full object-cover opacity-20 pointer-events-none"
         />
-        
-        {/* Bottom Gradient Overlay - Always present */}
+
+        {/* Bottom Gradient Overlay */}
         <div 
           className="absolute inset-x-0 bottom-0 h-32 pointer-events-none"
           style={{
@@ -77,18 +79,17 @@ const Hero = memo(function Hero() {
             {/* Image/Visual - Only on desktop */}
             <div className="relative max-w-md mx-auto hidden lg:block">
               <div className="aspect-square bg-gradient-to-br from-sky-100 via-accent-100 to-emerald-100 rounded-full overflow-hidden shadow-lg">
-                <img
+                <OptimizedImage
                   src="/damian.jpg"
                   alt="Damián Peña - Dibujante Arquitectónico Titulado"
                   className="w-full h-full object-cover"
                   loading="eager"
-                  decoding="async"
                 />
               </div>
 
               {/* Floating Elements */}
-              <div className="absolute -top-3 -right-3 w-16 h-16 bg-sky-400 rounded-lg opacity-20 rotate-12 transform-gpu" />
-              <div className="absolute -bottom-3 -left-3 w-12 h-12 bg-emerald-400 rounded-lg opacity-20 -rotate-12 transform-gpu" />
+              <div className="absolute -top-3 -right-3 w-16 h-16 bg-sky-400 rounded-lg opacity-20 rotate-12" />
+              <div className="absolute -bottom-3 -left-3 w-12 h-12 bg-emerald-400 rounded-lg opacity-20 -rotate-12" />
             </div>
           </div>
         </div>
@@ -98,12 +99,11 @@ const Hero = memo(function Hero() {
       <div className="lg:hidden flex justify-center py-8 bg-gradient-to-br from-sky-50 via-surface-50 to-emerald-50">
         <div className="relative w-40 h-40">
           <div className="aspect-square bg-gradient-to-br from-sky-100 via-accent-100 to-emerald-100 rounded-full overflow-hidden shadow-lg">
-            <img
+            <OptimizedImage
               src="/damian.jpg"
               alt="Damián Peña - Dibujante Arquitectónico Titulado"
               className="w-full h-full object-cover"
-              loading="eager"
-              decoding="async"
+              loading="lazy"
             />
           </div>
           {/* Floating elements for mobile */}

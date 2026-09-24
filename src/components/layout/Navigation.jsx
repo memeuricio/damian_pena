@@ -1,22 +1,23 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ROUTES } from '../../utils/constants';
+import { professionalProfile } from '../../data/mockData';
 
-export default function Navigation({ currentSection, onSectionChange, isMobile = false }) {
+const navigationItems = [
+  { path: ROUTES.HOME, label: 'Inicio' },
+  { path: ROUTES.PORTFOLIO, label: 'Portafolio' },
+  { path: ROUTES.SERVICES, label: 'Servicios' },
+  { path: ROUTES.ABOUT, label: 'Acerca de' },
+  { path: ROUTES.CONTACT, label: 'Contacto' }
+];
+
+export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
-
-  const navigationItems = [
-    { path: ROUTES.HOME, label: 'Inicio' },
-    { path: ROUTES.PORTFOLIO, label: 'Portafolio' },
-    { path: ROUTES.SERVICES, label: 'Servicios' },
-    { path: ROUTES.ABOUT, label: 'Acerca de' },
-    { path: ROUTES.CONTACT, label: 'Contacto' }
-  ];
+  const { fullName, title } = professionalProfile.personalInfo;
 
   const isActive = (path) => location.pathname === path;
-
-  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+  const toggleMenu = () => setIsMenuOpen((open) => !open);
 
   return (
     <nav className="bg-white border-b border-surface-200">
@@ -25,10 +26,10 @@ export default function Navigation({ currentSection, onSectionChange, isMobile =
           {/* Logo */}
           <Link to={ROUTES.HOME} className="flex items-center">
             <span className="text-xl font-bold text-primary-900">
-              Damián Peña
+              {fullName}
             </span>
             <span className="ml-2 text-sm text-primary-600 hidden sm:block">
-              Dibujante Arquitectónico
+              {title}
             </span>
           </Link>
 
@@ -39,12 +40,12 @@ export default function Navigation({ currentSection, onSectionChange, isMobile =
                 <Link
                   key={item.path}
                   to={item.path}
+                  aria-current={isActive(item.path) ? 'page' : undefined}
                   className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
                     isActive(item.path)
                       ? 'bg-primary-100 text-primary-900'
                       : 'text-primary-600 hover:bg-surface-100 hover:text-primary-900'
                   }`}
-                  onClick={() => onSectionChange && onSectionChange(item.path)}
                 >
                   {item.label}
                 </Link>
@@ -55,11 +56,13 @@ export default function Navigation({ currentSection, onSectionChange, isMobile =
           {/* Mobile menu button */}
           <div className="md:hidden">
             <button
+              type="button"
               onClick={toggleMenu}
-              className="inline-flex items-center justify-center p-2 rounded-md text-primary-600 hover:text-primary-900 hover:bg-surface-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500"
-              aria-expanded="false"
+              aria-expanded={isMenuOpen}
+              aria-controls="menu-movil"
+              className="inline-flex items-center justify-center p-2 rounded-md text-primary-600 hover:text-primary-900 hover:bg-surface-100"
             >
-              <span className="sr-only">Abrir menú principal</span>
+              <span className="sr-only">{isMenuOpen ? 'Cerrar menú principal' : 'Abrir menú principal'}</span>
               {!isMenuOpen ? (
                 <svg className="block h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -76,21 +79,19 @@ export default function Navigation({ currentSection, onSectionChange, isMobile =
 
       {/* Mobile menu */}
       {isMenuOpen && (
-        <div className="md:hidden">
+        <div className="md:hidden" id="menu-movil">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-surface-50 border-t border-surface-200">
             {navigationItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
+                aria-current={isActive(item.path) ? 'page' : undefined}
                 className={`block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 ${
                   isActive(item.path)
                     ? 'bg-primary-100 text-primary-900'
                     : 'text-primary-600 hover:bg-surface-100 hover:text-primary-900'
                 }`}
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  onSectionChange && onSectionChange(item.path);
-                }}
+                onClick={() => setIsMenuOpen(false)}
               >
                 {item.label}
               </Link>

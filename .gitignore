@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Fotos originales sin comprimir (pesan demasiado para el repo).
+# Las versiones web se generan en public/ con: npm run images
+assets/originals/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

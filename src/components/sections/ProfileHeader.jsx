@@ -1,4 +1,6 @@
 import { professionalProfile } from '../../data/mockData';
+import OptimizedImage from '../common/OptimizedImage';
+import ImagePlaceholder from '../common/ImagePlaceholder';
 
 export default function ProfileHeader() {
   const { personalInfo } = professionalProfile;
@@ -9,19 +11,13 @@ export default function ProfileHeader() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-center">
           {/* Photo */}
           <div className="lg:col-span-1">
-            <div className="aspect-square bg-gradient-to-br from-sky-100 via-accent-100 to-emerald-100 rounded-2xl flex items-center justify-center mx-auto max-w-sm">
-              <div className="text-center">
-                <div className="w-32 h-32 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                  <svg className="w-16 h-16 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                </div>
-                <p className="text-primary-600 text-sm">
-                  Foto profesional
-                  <br />
-                  (por agregar)
-                </p>
-              </div>
+            <div className="aspect-square bg-gradient-to-br from-sky-100 via-accent-100 to-emerald-100 rounded-2xl overflow-hidden mx-auto max-w-sm shadow-lg">
+              <OptimizedImage
+                src={personalInfo.photo}
+                alt={`${personalInfo.fullName} — ${personalInfo.title}`}
+                className="w-full h-full object-cover"
+                fallback={<ImagePlaceholder iconClassName="w-16 h-16" />}
+              />
             </div>
           </div>
 

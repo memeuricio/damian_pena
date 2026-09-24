@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import ProjectCard from './ProjectCard';
 import ProjectFilters from './ProjectFilters';
 import SearchBar from './SearchBar';
+import { getCategoryLabel } from '../../utils/helpers';
 import { mockProjects } from '../../data/mockData';
 
 export default function ProjectGrid({ onProjectClick }) {
@@ -11,54 +12,45 @@ export default function ProjectGrid({ onProjectClick }) {
 
   // Filter and sort projects
   const filteredAndSortedProjects = useMemo(() => {
-    let filtered = mockProjects;
+    const searchLower = searchTerm.trim().toLowerCase();
 
-    // Filter by category
-    if (selectedCategory !== 'all') {
-      filtered = filtered.filter(project => project.category === selectedCategory);
-    }
-
-    // Filter by search term
-    if (searchTerm.trim()) {
-      const searchLower = searchTerm.toLowerCase();
-      filtered = filtered.filter(project => 
-        project.title.toLowerCase().includes(searchLower) ||
-        project.description.toLowerCase().includes(searchLower) ||
-        project.shortDescription.toLowerCase().includes(searchLower) ||
-        project.specifications.location.toLowerCase().includes(searchLower) ||
-        project.tags.some(tag => tag.toLowerCase().includes(searchLower))
-      );
-    }
-
-    // Sort projects
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case 'year':
-          return b.specifications.year - a.specifications.year;
-        case 'title':
-          return a.title.localeCompare(b.title);
-        case 'category':
-          return a.category.localeCompare(b.category);
-        default:
-          return 0;
-      }
-    });
-
-    return filtered;
+    // filter() siempre devuelve un array nuevo, así que el sort() de abajo no
+    // toca mockProjects (antes, sin filtros, ordenaba el array importado in situ).
+    return mockProjects
+      .filter((project) => selectedCategory === 'all' || project.category === selectedCategory)
+      .filter((project) => {
+        if (!searchLower) return true;
+        const searchable = [
+          project.title,
+          project.description,
+          project.shortDescription,
+          project.specifications.location,
+          ...(project.tags ?? []),
+        ];
+        return searchable.some((field) => field?.toLowerCase().includes(searchLower));
+      })
+      .sort((a, b) => {
+        switch (sortBy) {
+          case 'year':
+            return b.specifications.year - a.specifications.year;
+          case 'title':
+            return a.title.localeCompare(b.title);
+          case 'category':
+            return a.category.localeCompare(b.category);
+          default:
+            return 0;
+        }
+      });
   }, [selectedCategory, sortBy, searchTerm]);
 
-  // Calculate project counts by category (for all projects, not filtered by search)
+  // Conteo por categoría sobre todos los proyectos (no afectado por la búsqueda)
   const projectCounts = useMemo(() => {
     const counts = {};
-    mockProjects.forEach(project => {
+    for (const project of mockProjects) {
       counts[project.category] = (counts[project.category] || 0) + 1;
-    });
+    }
     return counts;
   }, []);
-
-  const handleSearch = (term) => {
-    setSearchTerm(term);
-  };
 
   const handleClearFilters = () => {
     setSelectedCategory('all');
@@ -67,13 +59,15 @@ export default function ProjectGrid({ onProjectClick }) {
   };
 
   const hasActiveFilters = selectedCategory !== 'all' || searchTerm.trim() !== '';
+  const resultCount = filteredAndSortedProjects.length;
 
   return (
     <div>
       {/* Search Bar */}
       <div className="mb-8">
-        <SearchBar 
-          onSearch={handleSearch}
+        <SearchBar
+          value={searchTerm}
+          onChange={setSearchTerm}
           placeholder="Buscar por nombre, descripción, ubicación o características..."
         />
       </div>
@@ -86,14 +80,15 @@ export default function ProjectGrid({ onProjectClick }) {
       />
 
       {/* Results Header */}
-      <div className="flex justify-between items-center mb-8">
-        <div className="flex items-center space-x-4">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
+        <div className="flex items-center gap-4">
           <p className="text-primary-600">
-            {filteredAndSortedProjects.length} proyecto{filteredAndSortedProjects.length !== 1 ? 's' : ''} encontrado{filteredAndSortedProjects.length !== 1 ? 's' : ''}
+            {resultCount} proyecto{resultCount !== 1 ? 's' : ''} encontrado{resultCount !== 1 ? 's' : ''}
           </p>
-          
+
           {hasActiveFilters && (
             <button
+              type="button"
               onClick={handleClearFilters}
               className="text-sm text-accent-600 hover:text-accent-700 underline"
             >
@@ -101,7 +96,7 @@ export default function ProjectGrid({ onProjectClick }) {
             </button>
           )}
         </div>
-        
+
         <div className="flex items-center space-x-2">
           <label htmlFor="sort" className="text-sm text-primary-600">
             Ordenar por:
@@ -126,7 +121,9 @@ export default function ProjectGrid({ onProjectClick }) {
             <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-accent-100 text-accent-800">
               Búsqueda: "{searchTerm}"
               <button
+                type="button"
                 onClick={() => setSearchTerm('')}
+                aria-label="Quitar filtro de búsqueda"
                 className="ml-2 text-accent-600 hover:text-accent-800"
               >
                 ×
@@ -135,9 +132,11 @@ export default function ProjectGrid({ onProjectClick }) {
           )}
           {selectedCategory !== 'all' && (
             <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-accent-100 text-accent-800">
-              Categoría: {selectedCategory}
+              Categoría: {getCategoryLabel(selectedCategory)}
               <button
+                type="button"
                 onClick={() => setSelectedCategory('all')}
+                aria-label="Quitar filtro de categoría"
                 className="ml-2 text-accent-600 hover:text-accent-800"
               >
                 ×
@@ -148,12 +147,12 @@ export default function ProjectGrid({ onProjectClick }) {
       )}
 
       {/* Projects Grid */}
-      {filteredAndSortedProjects.length > 0 ? (
+      {resultCount > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredAndSortedProjects.map((project) => (
-            <ProjectCard 
-              key={project.id} 
-              project={project} 
+            <ProjectCard
+              key={project.id}
+              project={project}
               onClick={onProjectClick}
             />
           ))}
@@ -167,13 +166,13 @@ export default function ProjectGrid({ onProjectClick }) {
             No se encontraron proyectos
           </h3>
           <p className="text-primary-600 mb-4">
-            {searchTerm.trim() 
+            {searchTerm.trim()
               ? `No hay proyectos que coincidan con "${searchTerm}"`
-              : 'No hay proyectos en la categoría seleccionada.'
-            }
+              : 'No hay proyectos en la categoría seleccionada.'}
           </p>
           {hasActiveFilters && (
             <button
+              type="button"
               onClick={handleClearFilters}
               className="text-accent-600 hover:text-accent-700 underline"
             >

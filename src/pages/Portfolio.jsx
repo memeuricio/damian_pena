@@ -1,37 +1,44 @@
-import { useState } from 'react';
+import { useMemo } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import Header from '../components/layout/Header';
 import ProjectGrid from '../components/sections/ProjectGrid';
 import ProjectDetail from '../components/sections/ProjectDetail';
 import { mockProjects } from '../data/mockData';
+import { ROUTES } from '../utils/constants';
 
+/**
+ * El proyecto abierto vive en la URL (/portfolio/:projectId), no en estado local.
+ * Así los enlaces a un proyecto concreto desde la home funcionan de verdad y se
+ * puede compartir el enlace directo.
+ */
 export default function Portfolio() {
-  const [selectedProject, setSelectedProject] = useState(null);
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const { projectId } = useParams();
+  const navigate = useNavigate();
 
-  const handleProjectClick = (projectId) => {
-    const project = mockProjects.find(p => p.id === projectId);
-    setSelectedProject(project);
-    setIsDetailOpen(true);
+  const selectedProject = useMemo(
+    () => mockProjects.find((project) => project.id === projectId) ?? null,
+    [projectId]
+  );
+
+  const handleProjectClick = (id) => {
+    navigate(`${ROUTES.PORTFOLIO}/${id}`);
   };
 
   const handleCloseDetail = () => {
-    setIsDetailOpen(false);
-    setSelectedProject(null);
+    navigate(ROUTES.PORTFOLIO);
   };
 
   const handleNavigateProject = (direction) => {
     if (!selectedProject) return;
-    
-    const currentIndex = mockProjects.findIndex(p => p.id === selectedProject.id);
-    let newIndex;
-    
-    if (direction === 'next') {
-      newIndex = currentIndex === mockProjects.length - 1 ? 0 : currentIndex + 1;
-    } else {
-      newIndex = currentIndex === 0 ? mockProjects.length - 1 : currentIndex - 1;
-    }
-    
-    setSelectedProject(mockProjects[newIndex]);
+
+    const currentIndex = mockProjects.findIndex((p) => p.id === selectedProject.id);
+    const lastIndex = mockProjects.length - 1;
+    const newIndex =
+      direction === 'next'
+        ? currentIndex === lastIndex ? 0 : currentIndex + 1
+        : currentIndex === 0 ? lastIndex : currentIndex - 1;
+
+    navigate(`${ROUTES.PORTFOLIO}/${mockProjects[newIndex].id}`);
   };
 
   return (
@@ -47,8 +54,9 @@ export default function Portfolio() {
       </div>
 
       <ProjectDetail
+        key={selectedProject?.id ?? 'cerrado'}
         project={selectedProject}
-        isOpen={isDetailOpen}
+        isOpen={Boolean(selectedProject)}
         onClose={handleCloseDetail}
         onNavigate={handleNavigateProject}
       />

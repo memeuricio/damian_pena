@@ -1,30 +1,33 @@
 import { useState } from 'react';
 import Modal from '../common/Modal';
 import Button from '../common/Button';
+import OptimizedImage from '../common/OptimizedImage';
+import ImagePlaceholder from '../common/ImagePlaceholder';
 import { getCategoryLabel } from '../../utils/helpers';
 
+/**
+ * Detalle de un proyecto en un modal.
+ *
+ * Importante: renderízalo con `key={project?.id}` (ver pages/Portfolio.jsx). Así
+ * React lo remonta al cambiar de proyecto o al cerrarlo, y el índice de imagen y
+ * el zoom vuelven a cero. Antes ese reset se hacía con un useEffect que provocaba
+ * renders en cascada.
+ */
 export default function ProjectDetail({ project, isOpen, onClose, onNavigate }) {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isImageZoomed, setIsImageZoomed] = useState(false);
 
   if (!project) return null;
 
-  const currentImage = project.images[selectedImageIndex];
+  const images = project.images ?? [];
+  const currentImage = images[selectedImageIndex];
 
   const handlePrevImage = () => {
-    setSelectedImageIndex(prev => 
-      prev === 0 ? project.images.length - 1 : prev - 1
-    );
+    setSelectedImageIndex(prev => (prev === 0 ? images.length - 1 : prev - 1));
   };
 
   const handleNextImage = () => {
-    setSelectedImageIndex(prev => 
-      prev === project.images.length - 1 ? 0 : prev + 1
-    );
-  };
-
-  const handleImageClick = () => {
-    setIsImageZoomed(!isImageZoomed);
+    setSelectedImageIndex(prev => (prev === images.length - 1 ? 0 : prev + 1));
   };
 
   return (
@@ -39,10 +42,10 @@ export default function ProjectDetail({ project, isOpen, onClose, onNavigate }) 
         <div className="border-b border-surface-200 pb-4">
           <div className="flex items-start justify-between mb-2">
             <div>
-              <h1 className="text-2xl font-bold text-primary-900 mb-2">
+              <h2 className="text-2xl font-bold text-primary-900 mb-2">
                 {project.title}
-              </h1>
-              <div className="flex items-center space-x-4 text-sm text-primary-600">
+              </h2>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-primary-600">
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
                   {getCategoryLabel(project.category)}
                 </span>
@@ -50,22 +53,14 @@ export default function ProjectDetail({ project, isOpen, onClose, onNavigate }) 
                 <span>{project.specifications.location}</span>
               </div>
             </div>
-            
+
             {/* Navigation buttons */}
             {onNavigate && (
-              <div className="flex space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onNavigate('prev')}
-                >
+              <div className="flex space-x-2 shrink-0">
+                <Button variant="outline" size="sm" onClick={() => onNavigate('prev')}>
                   ← Anterior
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onNavigate('next')}
-                >
+                <Button variant="outline" size="sm" onClick={() => onNavigate('next')}>
                   Siguiente →
                 </Button>
               </div>
@@ -77,55 +72,49 @@ export default function ProjectDetail({ project, isOpen, onClose, onNavigate }) 
         <div className="space-y-4">
           {/* Main Image */}
           <div className="relative">
-            <div 
-              className={`relative bg-surface-100 rounded-lg overflow-hidden cursor-zoom-in ${
-                isImageZoomed ? 'fixed inset-0 z-50 bg-black bg-opacity-90 flex items-center justify-center' : 'aspect-16/10'
+            <div
+              className={`relative bg-surface-100 rounded-lg overflow-hidden ${
+                isImageZoomed
+                  ? 'fixed inset-0 z-[60] bg-black/90 flex items-center justify-center'
+                  : 'aspect-16/10 cursor-zoom-in'
               }`}
-              onClick={handleImageClick}
+              onClick={() => setIsImageZoomed(!isImageZoomed)}
             >
-              {currentImage ? (
-                <img
-                  src={currentImage.url}
-                  alt={currentImage.alt}
-                  className={`${
-                    isImageZoomed 
-                      ? 'max-w-full max-h-full object-contain cursor-zoom-out' 
-                      : 'w-full h-full object-cover'
-                  }`}
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                    e.target.nextSibling.style.display = 'flex';
-                  }}
-                />
-              ) : null}
-              
-              {/* Placeholder */}
-              <div className="w-full h-full bg-surface-200 flex items-center justify-center" style={{ display: currentImage ? 'none' : 'flex' }}>
-                <svg className="w-16 h-16 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-              </div>
+              <OptimizedImage
+                src={currentImage?.url}
+                alt={currentImage?.alt || project.title}
+                className={
+                  isImageZoomed
+                    ? 'max-w-full max-h-full object-contain cursor-zoom-out'
+                    : 'w-full h-full object-cover'
+                }
+                fallback={<ImagePlaceholder />}
+              />
 
               {/* Navigation arrows */}
-              {!isImageZoomed && project.images.length > 1 && (
+              {!isImageZoomed && images.length > 1 && (
                 <>
                   <button
+                    type="button"
+                    aria-label="Imagen anterior"
                     onClick={(e) => {
                       e.stopPropagation();
                       handlePrevImage();
                     }}
-                    className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition-opacity"
+                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
                   </button>
                   <button
+                    type="button"
+                    aria-label="Imagen siguiente"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleNextImage();
                     }}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition-opacity"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -136,14 +125,14 @@ export default function ProjectDetail({ project, isOpen, onClose, onNavigate }) 
 
               {/* Zoom indicator */}
               {!isImageZoomed && (
-                <div className="absolute top-4 right-4 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-xs">
+                <div className="absolute top-4 right-4 bg-black/50 text-white px-2 py-1 rounded text-xs">
                   Click para ampliar
                 </div>
               )}
             </div>
 
             {/* Image caption */}
-            {currentImage?.caption && (
+            {!isImageZoomed && currentImage?.caption && (
               <p className="text-sm text-primary-600 mt-2 text-center">
                 {currentImage.caption}
               </p>
@@ -151,32 +140,27 @@ export default function ProjectDetail({ project, isOpen, onClose, onNavigate }) 
           </div>
 
           {/* Thumbnail navigation */}
-          {project.images.length > 1 && (
+          {images.length > 1 && !isImageZoomed && (
             <div className="flex space-x-2 overflow-x-auto pb-2">
-              {project.images.map((image, index) => (
+              {images.map((image, index) => (
                 <button
+                  type="button"
                   key={image.id}
+                  aria-label={`Ver imagen ${index + 1}`}
+                  aria-current={index === selectedImageIndex}
                   onClick={() => setSelectedImageIndex(index)}
-                  className={`shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                  className={`shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-colors ${
                     index === selectedImageIndex
                       ? 'border-sky-500'
                       : 'border-surface-200 hover:border-surface-300'
                   }`}
                 >
-                  <img
+                  <OptimizedImage
                     src={image.url}
                     alt={image.alt}
                     className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                      e.target.nextSibling.style.display = 'flex';
-                    }}
+                    fallback={<ImagePlaceholder iconClassName="w-6 h-6" />}
                   />
-                  <div className="w-full h-full bg-surface-200 flex items-center justify-center" style={{ display: 'none' }}>
-                    <svg className="w-6 h-6 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  </div>
                 </button>
               ))}
             </div>
@@ -193,15 +177,15 @@ export default function ProjectDetail({ project, isOpen, onClose, onNavigate }) 
             <p className="text-primary-700 leading-relaxed mb-4">
               {project.description}
             </p>
-            
+
             {/* Tags */}
             {project.tags && project.tags.length > 0 && (
               <div>
                 <h4 className="text-sm font-medium text-primary-900 mb-2">Características:</h4>
                 <div className="flex flex-wrap gap-2">
-                  {project.tags.map((tag, index) => (
+                  {project.tags.map((tag) => (
                     <span
-                      key={index}
+                      key={tag}
                       className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-surface-100 text-primary-700"
                     >
                       {tag}
@@ -218,10 +202,13 @@ export default function ProjectDetail({ project, isOpen, onClose, onNavigate }) 
               Especificaciones Técnicas
             </h3>
             <div className="space-y-3">
-              <div className="flex justify-between items-center py-2 border-b border-surface-200">
-                <span className="text-primary-600">Área:</span>
-                <span className="font-medium text-primary-900">{project.specifications.area}</span>
-              </div>
+              {/* Solo se listan los campos que existen: antes mostraba filas vacías. */}
+              {project.specifications.area && (
+                <div className="flex justify-between items-center py-2 border-b border-surface-200">
+                  <span className="text-primary-600">Área:</span>
+                  <span className="font-medium text-primary-900">{project.specifications.area}</span>
+                </div>
+              )}
               <div className="flex justify-between items-center py-2 border-b border-surface-200">
                 <span className="text-primary-600">Ubicación:</span>
                 <span className="font-medium text-primary-900">{project.specifications.location}</span>
@@ -248,8 +235,10 @@ export default function ProjectDetail({ project, isOpen, onClose, onNavigate }) 
       {/* Close zoom overlay */}
       {isImageZoomed && (
         <button
+          type="button"
+          aria-label="Cerrar imagen ampliada"
           onClick={() => setIsImageZoomed(false)}
-          className="fixed top-4 right-4 z-50 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition-opacity"
+          className="fixed top-4 right-4 z-[61] bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

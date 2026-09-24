@@ -18,7 +18,6 @@ export default function ServicesCatalog({ onServiceSelect }) {
   const filteredServices = selectedCategory === 'all' 
     ? mockServices 
     : mockServices.filter(service => service.category === selectedCategory);
-
   return (
     <div>
       {/* Category Filters */}

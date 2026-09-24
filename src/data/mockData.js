@@ -4,11 +4,19 @@ export const professionalProfile = {
   personalInfo: {
     fullName: "Damián Peña",
     title: "Dibujante Arquitectónico Titulado",
-    photo: "/images/profile/damian-pena.jpg", // Placeholder path
+    photo: "/damian.jpg",
     email: "damiancpg@gmail.com",
     phone: "+56 9 3223 3332",
     location: "Maipú, Chile",
     summary: "Dibujante arquitectónico con experiencia en proyectos residenciales y comerciales, especializado en planos técnicos y visualización arquitectónica."
+  },
+  /**
+   * Redes sociales. Deja la cadena vacía en las que no uses: los enlaces vacíos
+   * simplemente no se muestran (antes había enlaces href="#" que no llevaban a nada).
+   */
+  social: {
+    linkedin: "",
+    instagram: ""
   },
   education: [
     {
@@ -43,6 +51,15 @@ export const professionalProfile = {
   ]
 };
 
+/**
+ * Proyectos del portafolio.
+ *
+ * `category` debe ser una de las claves de PROJECT_CATEGORIES (utils/constants.js):
+ * residential | commercial | patrimonial | industrial | renovation.
+ *
+ * `specifications.area` es opcional: si no está, la tarjeta y el detalle simplemente
+ * no muestran esa fila. Complétala cuando tengas la superficie real de cada proyecto.
+ */
 export const mockProjects = [
   {
     id: "1",
@@ -53,8 +70,8 @@ export const mockProjects = [
     images: [
       {
         id: "1",
-        url: "/p2.jpeg",
-        alt: "Vista frontal Casa Los Andes",
+        url: "/p2.jpg",
+        alt: "Bóvedas de Vino — fachada principal",
         caption: "Fachada principal",
         isPrimary: true
       }
@@ -64,57 +81,62 @@ export const mockProjects = [
       year: 2024,
       client: "Familia González"
     },
-    tags: ["commercial", "moderno", "sustentable"],
+    tags: ["comercial", "especialidades", "levantamiento"],
     featured: true
   },
   {
     id: "2",
     title: "Proyecto Basílica de La Merced",
-    category: "Patrimonio",
+    category: "patrimonial",
     description: "Participé en la intervención de este inmueble patrimonial, desarrollando labores en el área de paisaje, integrando y levantando los distintos elementos y artefactos del entorno, además de colaborar en trabajos asociados a la fachada del proyecto.",
     shortDescription: "Intervención inmueble patrimonial",
     images: [
       {
         id: "2",
-        url: "/p1.jpeg",
-        alt: "Interior oficinas centro",
+        url: "/p1.jpg",
+        alt: "Basílica de La Merced — área de trabajo principal",
         caption: "Área de trabajo principal",
         isPrimary: true
       }
     ],
     specifications: {
       location: "Santiago Centro, Chile",
-      year: 2024,
-      client: "Empresa XYZ"
+      year: 2024
     },
-    tags: ["comercial", "oficinas", "corporativo"],
+    tags: ["patrimonial", "paisaje", "fachada"],
     featured: true
   },
   {
     id: "3",
     title: "Proyecto Iglesia El Buen Pastor",
-    category: "Patrimonial",
+    category: "patrimonial",
     description: "Participé en la elaboración y desarrollo de la fachada de la iglesia, así como en el levantamiento y modelamiento del contexto del proyecto, colaborando con la empresa PointCloud.",
     shortDescription: "Elaboración y desarrollo de la fachada de la iglesia",
     images: [
       {
         id: "3",
-        url: "/p3.png",
-        alt: "Casa patrimonial remodelada",
-        caption: "Fachada restaurada",
+        url: "/p3.jpg",
+        alt: "Iglesia El Buen Pastor — fachada",
+        caption: "Fachada de la iglesia",
         isPrimary: true
       }
     ],
     specifications: {
       location: "Independencia, Chile",
-      year: 2022,
-      client: "Municipalidad de Valparaíso"
+      year: 2022
     },
-    tags: ["patrimonial", "restauración", "histórico"],
+    tags: ["patrimonial", "fachada", "levantamiento"],
     featured: true
   }
 ];
 
+/**
+ * Servicios ofrecidos.
+ *
+ * `examples` está vacío a propósito: apuntaba a /images/services/*.jpg, archivos que
+ * no existen en public/ (generaban 404 y huecos en blanco). Agrega rutas reales cuando
+ * tengas imágenes de ejemplo; recuerda incluirlas en scripts/optimize-images.mjs.
+ */
 export const mockServices = [
   {
     id: "1",
@@ -135,7 +157,7 @@ export const mockServices = [
     ],
     estimatedTimeframe: "2-4 semanas",
     priceRange: "$500.000 - $1.500.000",
-    examples: ["/images/services/planos-ejemplo-1.jpg"]
+    examples: []
   },
   {
     id: "2",
@@ -156,7 +178,7 @@ export const mockServices = [
     ],
     estimatedTimeframe: "1-2 semanas",
     priceRange: "$200.000 - $800.000",
-    examples: ["/images/services/consultoria-ejemplo-1.jpg"]
+    examples: []
   },
   {
     id: "3",
@@ -177,6 +199,6 @@ export const mockServices = [
     ],
     estimatedTimeframe: "3-6 semanas",
     priceRange: "$800.000 - $2.000.000",
-    examples: ["/images/services/documentacion-ejemplo-1.jpg"]
+    examples: []
   }
 ];

@@ -1,76 +1,120 @@
 @import "tailwindcss";
 
-/* Custom CSS Variables for Professional Theme */
-:root {
-  /* Professional Color Palette */
-  --color-primary: #1a1a1a;
-  --color-secondary: #4a4a4a;
-  --color-accent: #2563eb;
-  --color-background: #ffffff;
-  --color-surface: #f8fafc;
-  --color-border: #e2e8f0;
-  --color-text-primary: #1e293b;
-  --color-text-secondary: #64748b;
-  --color-text-muted: #94a3b8;
-  
-  /* New Pastel Colors */
-  --color-sky-light: #f0f9ff;
-  --color-sky-medium: #bae6fd;
-  --color-sky-accent: #0ea5e9;
-  --color-emerald-light: #ecfdf5;
-  --color-emerald-medium: #a7f3d0;
-  --color-emerald-accent: #10b981;
-  
-  /* Spacing */
+/* ==========================================================================
+   Tema — Tailwind CSS v4
+   La configuración vive aquí, no en tailwind.config.js.
+   (En v4, un tailwind.config.js NO se lee salvo que se importe con @config,
+   por eso las clases de color primary, accent y surface no generaban CSS.)
+   ========================================================================== */
+@theme {
+  /* Azules grisáceos (equivale a la paleta slate) */
+  --color-primary-50: #f8fafc;
+  --color-primary-100: #f1f5f9;
+  --color-primary-200: #e2e8f0;
+  --color-primary-300: #cbd5e1;
+  --color-primary-400: #94a3b8;
+  --color-primary-500: #64748b;
+  --color-primary-600: #475569;
+  --color-primary-700: #334155;
+  --color-primary-800: #1e293b;
+  --color-primary-900: #0f172a;
+
+  /* Azul de acento */
+  --color-accent-50: #eff6ff;
+  --color-accent-100: #dbeafe;
+  --color-accent-200: #bfdbfe;
+  --color-accent-300: #93c5fd;
+  --color-accent-400: #60a5fa;
+  --color-accent-500: #3b82f6;
+  --color-accent-600: #2563eb;
+  --color-accent-700: #1d4ed8;
+  --color-accent-800: #1e40af;
+
+  /* Superficies y bordes */
+  --color-surface-50: #f8fafc;
+  --color-surface-100: #f1f5f9;
+  --color-surface-200: #e2e8f0;
+  --color-surface-300: #cbd5e1;
+  --color-surface-400: #94a3b8;
+
+  /* sky-* y emerald-* son colores por defecto de Tailwind, no hace falta redefinirlos. */
+
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+
   --spacing-section: 5rem;
   --spacing-component: 2rem;
-  
-  /* Typography */
-  --font-heading: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+
+  --animate-fade-in: fadeIn 0.5s ease-in-out;
+  --animate-slide-up: slideUp 0.5s ease-out;
+
+  @keyframes fadeIn {
+    from { opacity: 0 }
+    to { opacity: 1 }
+  }
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0 }
+    to { transform: translateY(0); opacity: 1 }
+  }
 }
 
-/* Base Typography */
-body {
-  font-family: var(--font-body);
-  color: var(--color-text-primary);
-  line-height: 1.6;
+/* ==========================================================================
+   Estilos base
+   Van dentro de @layer base a propósito: el CSS sin capa gana siempre a las
+   utilidades de Tailwind, y eso rompía font-bold / leading-tight / text-white
+   en los títulos y focus:outline-none en los botones.
+   ========================================================================== */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    color: var(--color-primary-900);
+    line-height: 1.6;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--color-primary-900);
+  }
+
+  /* :focus-visible en vez de :focus para no marcar al hacer clic con el mouse. */
+  :focus-visible {
+    outline: 2px solid var(--color-accent-600);
+    outline-offset: 2px;
+  }
+
+  button {
+    font-family: inherit;
+  }
+
+  /* Destino de los enlaces con #ancla (por ejemplo /services#2) */
+  :target {
+    scroll-margin-top: 5rem;
+  }
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-heading);
-  font-weight: 600;
-  line-height: 1.2;
-  color: var(--color-primary);
+/* Respeta la preferencia de movimiento reducido del sistema */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
-/* Smooth Transitions */
-* {
-  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
-}
-
-/* Focus Styles for Accessibility */
-*:focus {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
-}
-
-/* Professional Button Reset */
-button {
-  font-family: inherit;
-}
-
-/* Image Optimization */
-img {
-  max-width: 100%;
-  height: auto;
-}
-
-/* Subtle gradient backgrounds for sections */
-.bg-gradient-sky {
-  background: linear-gradient(135deg, var(--color-sky-light) 0%, var(--color-surface) 100%);
-}
-
-.bg-gradient-emerald {
-  background: linear-gradient(135deg, var(--color-emerald-light) 0%, var(--color-surface) 100%);
+/*
+  El visor 3D no debe secuestrar el scroll del móvil.
+  OrbitControls escribe touch-action:"none" como estilo inline sobre el canvas,
+  así que hace falta !important para ganarle. Con pan-y, el arrastre vertical
+  sigue desplazando la página y el horizontal gira el modelo.
+*/
+.scene-canvas canvas {
+  touch-action: pan-y pinch-zoom !important;
 }

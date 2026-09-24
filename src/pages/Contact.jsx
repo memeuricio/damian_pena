@@ -3,9 +3,18 @@ import ContactForm from '../components/sections/ContactForm';
 import ContactInfo from '../components/sections/ContactInfo';
 
 export default function Contact() {
-  const handleFormSubmit = (formData) => {
-    console.log('Form submitted:', formData);
-    // Here you would typically send the data to your backend
+  /**
+   * Punto de integración del formulario.
+   *
+   * Ahora mismo solo simula la espera: no envía nada a ningún lado. Para que
+   * llegue de verdad, reemplaza el setTimeout por una llamada real. Opciones sin
+   * backend propio: Formspree, Web3Forms, EmailJS o Netlify Forms.
+   *
+   * Si la promesa se rechaza, el formulario muestra el mensaje de error.
+   */
+  const handleFormSubmit = async (formData) => {
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    console.log('Formulario listo para enviar:', formData);
   };
 
   return (

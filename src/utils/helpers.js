@@ -1,5 +1,8 @@
 // Utility functions for the application
 
+/** Devuelve la ruta del WebP equivalente a una imagen. Ver npm run images. */
+export const toWebp = (path) => path.replace(/\.(jpe?g|png)$/i, ".webp");
+
 export const formatCurrency = (amount) => {
   return new Intl.NumberFormat('es-CL', {
     style: 'currency',
@@ -18,6 +21,8 @@ export const formatDate = (dateString) => {
 export const slugify = (text) => {
   return text
     .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // quita tildes: "Bóvedas" -> "bovedas"
     .replace(/[^\w\s-]/g, '')
     .replace(/[\s_-]+/g, '-')
     .replace(/^-+|-+$/g, '');
@@ -25,7 +30,7 @@ export const slugify = (text) => {
 
 export const truncateText = (text, maxLength = 100) => {
   if (text.length <= maxLength) return text;
-  return text.substr(0, maxLength).trim() + '...';
+  return text.slice(0, maxLength).trim() + '...';
 };
 
 export const getCategoryLabel = (category) => {
@@ -34,6 +39,7 @@ export const getCategoryLabel = (category) => {
     commercial: 'Comercial',
     industrial: 'Industrial',
     renovation: 'Remodelación',
+    patrimonial: 'Patrimonial',
     design: 'Diseño',
     consultation: 'Consultoría',
     documentation: 'Documentación'

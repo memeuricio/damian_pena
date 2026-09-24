@@ -1,11 +1,14 @@
+import { useState } from 'react';
 import Button from '../common/Button';
 
+/**
+ * Cuando tengas el PDF real, guárdalo en public/ y pon aquí su ruta
+ * (por ejemplo "/cv-damian-pena.pdf"). El botón pasa a ser una descarga real.
+ */
+const CV_URL = null;
+
 export default function CVDownload() {
-  const handleDownloadCV = () => {
-    // Placeholder for CV download functionality
-    // In a real implementation, this would trigger a PDF download
-    alert('Funcionalidad de descarga de CV - Por implementar con archivo PDF real');
-  };
+  const [showNotice, setShowNotice] = useState(false);
 
   return (
     <section className="py-16 bg-gradient-to-br from-sky-50 via-surface-50 to-emerald-50">
@@ -27,16 +30,28 @@ export default function CVDownload() {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              variant="primary" 
-              size="lg"
-              onClick={handleDownloadCV}
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              Descargar CV (PDF)
-            </Button>
+            {CV_URL ? (
+              <a href={CV_URL} download>
+                <Button variant="primary" size="lg" className="w-full sm:w-auto">
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Descargar CV (PDF)
+                </Button>
+              </a>
+            ) : (
+              <Button
+                variant="primary"
+                size="lg"
+                className="w-full sm:w-auto"
+                onClick={() => setShowNotice(true)}
+              >
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Descargar CV (PDF)
+              </Button>
+            )}
             
             <Button 
               variant="outline" 
@@ -49,6 +64,14 @@ export default function CVDownload() {
               Imprimir Página
             </Button>
           </div>
+
+          {/* Aviso en pantalla en vez del alert() de "por implementar" */}
+          {showNotice && !CV_URL && (
+            <p role="status" className="mt-6 text-sm text-primary-600 bg-surface-50 border border-surface-200 rounded-lg p-3">
+              El PDF del currículum aún no está publicado. Puedes usar{" "}
+              <strong>Imprimir Página</strong> para guardar esta información como PDF.
+            </p>
+          )}
           
           <div className="mt-6 text-sm text-primary-500">
             <p>Última actualización: Febrero 2026</p>

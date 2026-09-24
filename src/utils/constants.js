@@ -10,6 +10,7 @@ export const ROUTES = {
 export const PROJECT_CATEGORIES = {
   RESIDENTIAL: 'residential',
   COMMERCIAL: 'commercial',
+  PATRIMONIAL: 'patrimonial',
   INDUSTRIAL: 'industrial',
   RENOVATION: 'renovation'
 };
