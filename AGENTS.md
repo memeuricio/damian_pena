@@ -68,18 +68,24 @@ Todo el contenido editable vive en `src/data/mockData.js`.
 - [ ] **Modelos reales.** Las 9 maquetas son genéricas por *tipo* de edificio, construidas
       con primitivas en `projectModels.jsx`. Cuando haya modelos propios, cargarlos como
       GLTF ahí (el registro `PROJECT_MODELS` es el único punto a tocar).
-- [ ] **Ajustar el encuadre** si se quiere otro anillo: `RADIUS`, `RING_SQUASH` y
-      `CAMERA_ELEVATION` en `carouselLayout.js` son los tres números que lo gobiernan.
+- [ ] **Ajustar el encuadre** si se quiere otro anillo: `CAROUSEL_LAYOUTS` en
+      `carouselLayout.js` tiene un preset `mobile` y otro `desktop` (radio, elevación de
+      cámara, aire lateral, escalas, levante, atenuación). El anillo es circular: el
+      achatamiento en profundidad se quitó porque deformaba el arrastre.
 - [ ] Valorar mostrar menos piezas a la vez si en algún momento se quiere la del frente
       más grande (hoy se ven las 9, por requisito explícito).
 
 ## 4. Sección "Del plano a la obra"
 
 - [ ] **Sustituir la vivienda de ejemplo** por un proyecto real. Todo sale de
-      `src/components/three/housePlan.js`.
-- [ ] **Añadir aberturas de puertas y ventanas** partiendo los segmentos de `walls` en
-      dos. Se dejó sin hacer a propósito: sin diseñar bien la circulación, un baño que se
-      abre a la cocina es el tipo de error que un cliente profesional nota.
+      `src/components/three/housePlan.js`. Al reemplazarla, revisar también
+      `PLAN.openings`: las aberturas actuales son de la casa de ejemplo (circulación
+      tipo suite: el baño solo se accede desde el dormitorio).
+- [x] **Aberturas de puertas y ventanas.** `PLAN.openings` parte los muros en tramos
+      sólidos (`solidWallPieces()` y `openingsByWall()`): en el 3D las ventanas llevan
+      antepecho y vidrio, y en el SVG se dibujan el arco de giro de las puertas y el
+      eje del vidrio. Ambas vistas salen de los mismos datos, así que los huecos
+      siempre coinciden.
 
 ## 5. Infraestructura y calidad
 
@@ -120,9 +126,11 @@ Estas son las que hay que respetar al tocar el código. Están explicadas en det
    con captura, el `click` se entrega al contenedor y el visor 3D no se entera de que han
    pulsado una pieza.
 5. **`carouselTargets` devuelve coordenadas locales** al centro del anillo. La escena
-   coloca el grupo en `(0, 0, -RING_DEPTH)`.
+   coloca el grupo en `(0, 0, -radio)` con el radio del preset activo.
 6. **Se interpola el ángulo, no la posición**, y con `shortestDelta`: si no, las piezas
-   cortan por dentro del anillo o dan una vuelta de 320° en vez de 40°.
+   cortan por dentro del anillo o dan una vuelta de 320° en vez de 40°. Al medir el énfasis
+   hay que **normalizar** el ángulo (`shortestDelta(0, angle + giro)`): el valor crudo
+   acumula vueltas y tras un giro completo la pieza del frente se queda sin halo ni label.
 7. **Los props de transformación de R3F se reaplican** al cambiar de proyecto y pisarían
    la animación. Se pasan con valores iniciales fijos y todo lo mueve `useFrame`.
 8. **three.js aplica un factor 1/π a la luz difusa.** Con intensidades "normales" la
@@ -132,3 +140,7 @@ Estas son las que hay que respetar al tocar el código. Están explicadas en det
    siempre que `dist/index.html` no tenga un `modulepreload` de `three-*.js`.
 10. **`OptimizedImage` con `src` ausente** devuelve el respaldo. No volver a llamar a
     `toWebp` sin comprobar el tipo: tumbaba la página entera.
+11. **El clic de las piezas del carrusel se resuelve por cercanía angular**, no con el
+    raycaster (`handlePieceClick` en `ProjectCarouselScene.jsx`). Con la cámara baja las
+    piezas se solapan y las cajas de clic de las del frente tapan a las de atrás: con el
+    raycaster, pulsar las del fondo seleccionaba a la vecina.

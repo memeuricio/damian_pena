@@ -1,4 +1,4 @@
-import { PLAN } from './housePlan';
+import { PLAN, openingsByWall, solidWallPieces } from './housePlan';
 
 /**
  * El mismo plano, dibujado como plano técnico 2D en SVG.
@@ -8,21 +8,24 @@ import { PLAN } from './housePlan';
  *  - como respaldo si el dispositivo no puede crear un contexto WebGL
  *
  * Se genera desde los mismos datos que el modelo 3D (housePlan.js), así que
- * ambos siempre representan la misma casa.
+ * ambos siempre representan la misma casa, con los mismos huecos en los muros.
  */
 export default function PlanSvg({ className = '' }) {
-  const { width, depth, wallThickness, walls, rooms } = PLAN;
+  const { width, depth, wallThickness, rooms, openings } = PLAN;
 
   const gridLines = [];
   for (let x = 0; x <= width; x++) gridLines.push({ x1: x, y1: 0, x2: x, y2: depth, vertical: true });
   for (let z = 0; z <= depth; z++) gridLines.push({ x1: 0, y1: z, x2: width, y2: z, vertical: false });
+
+  const wallPieces = solidWallPieces();
+  const wallOpenings = openingsByWall();
 
   return (
     <svg
       viewBox={`-1.6 -1.3 ${width + 3.2} ${depth + 3}`}
       className={`w-full h-full ${className}`}
       role="img"
-      aria-label={`Plano de vivienda de ${width} por ${depth} metros con ${rooms.length} recintos`}
+      aria-label={`Plano de vivienda de ${width} por ${depth} metros con ${rooms.length} recintos y ${openings.length} aberturas`}
     >
       {/* Retícula de fondo */}
       <g stroke="#e2e8f0" strokeWidth={0.012}>
@@ -31,11 +34,61 @@ export default function PlanSvg({ className = '' }) {
         ))}
       </g>
 
-      {/* Muros */}
+      {/* Muros: sin cruzar los huecos de puertas y ventanas */}
       <g stroke="#2563eb" strokeWidth={wallThickness} strokeLinecap="square" opacity={0.9}>
-        {walls.map(([x1, z1, x2, z2], i) => (
+        {wallPieces.flat().map(([x1, z1, x2, z2], i) => (
           <line key={i} x1={x1} y1={z1} x2={x2} y2={z2} />
         ))}
+      </g>
+
+      {/* Aberturas: eje del vidrio (ventanas) y arco de giro + hoja (puertas) */}
+      <g fill="none" stroke="#64748b">
+        {wallPieces.map((pieces, wallIndex) =>
+          wallOpenings[wallIndex].map((opening, i) => {
+            const radius = Math.hypot(opening.x2 - opening.x1, opening.z2 - opening.z1);
+
+            if (opening.type === 'window') {
+              // Línea fina que recorre el hueco del muro: el eje del vidrio.
+              return (
+                <line
+                  key={`w${wallIndex}-${i}`}
+                  x1={opening.x1}
+                  y1={opening.z1}
+                  x2={opening.x2}
+                  y2={opening.z2}
+                  strokeWidth={0.03}
+                />
+              );
+            }
+
+            // Puerta: arco de giro de la hoja y hoja abierta. El ángulo base va
+            // de la bisagra hacia el otro extremo del hueco; `side` gira el arco
+            // 90° hacia un lado u otro del muro.
+            const hingeAtStart = opening.hinge !== 'end';
+            const hingeX = hingeAtStart ? opening.x1 : opening.x2;
+            const hingeZ = hingeAtStart ? opening.z1 : opening.z2;
+            const gapAngle = Math.atan2(opening.z2 - opening.z1, opening.x2 - opening.x1);
+            const baseAngle = hingeAtStart ? gapAngle : gapAngle + Math.PI;
+            const endAngle = baseAngle + (opening.side ?? 1) * (Math.PI / 2);
+
+            const arc = [];
+            for (let k = 0; k <= 8; k++) {
+              const angle = baseAngle + ((endAngle - baseAngle) * k) / 8;
+              arc.push(
+                `${(hingeX + radius * Math.cos(angle)).toFixed(3)},${(hingeZ + radius * Math.sin(angle)).toFixed(3)}`
+              );
+            }
+
+            const [leafX, leafZ] = arc[arc.length - 1].split(',');
+
+            return (
+              <g key={`d${wallIndex}-${i}`} strokeWidth={0.025}>
+                <polyline points={arc.join(' ')} strokeDasharray="0.07 0.05" />
+                <line x1={hingeX} y1={hingeZ} x2={leafX} y2={leafZ} />
+              </g>
+            );
+          })
+        )}
       </g>
 
       {/* Recintos */}

@@ -98,12 +98,20 @@ src/components/sections/PlanToBuilding.jsx   La sección (textos + proceso).
 ### Cambiar la casa de ejemplo
 
 Todo sale de `housePlan.js`. Para cambiar la distribución, edita `walls` (segmentos
-`[x1, z1, x2, z2]` en metros) y `rooms` (nombre, superficie y posición de la etiqueta).
-El modelo 3D y el plano SVG se regeneran solos a partir de esos datos.
+`[x1, z1, x2, z2]` en metros), `openings` (puertas y ventanas) y `rooms` (nombre,
+superficie y posición de la etiqueta). El modelo 3D y el plano SVG se regeneran solos
+a partir de esos datos.
+
+Las aberturas se declaran en `openings` con `wall` (índice en `walls`), `from`/`to`
+(coordenadas `[x, z]` de los extremos del hueco, siempre sobre la línea del muro),
+`type` (`'door'` o `'window'`) y, en las puertas, `hinge` y `side` para el arco de
+giro. `solidWallPieces()` y `openingsByWall()` parten los muros por esos huecos: el 3D
+muestra el hueco con antepecho y vidrio en las ventanas, y el plano SVG dibuja el arco
+de giro de las puertas y el eje del vidrio. Ambas vistas salen de los mismos datos, así
+que los huecos siempre coinciden.
 
 > Cuando tengas un proyecto real modelado, lo natural es sustituir esta vivienda de
-> ejemplo por uno de tus proyectos. También se le pueden añadir aberturas de puertas
-> y ventanas partiendo los segmentos de `walls` en dos.
+> ejemplo por uno de tus proyectos y ajustar `openings` a su circulación real.
 
 ### Decisiones de rendimiento
 
@@ -131,9 +139,7 @@ three.js aplica un factor **1/π** a la luz difusa, así que con valores "normal
 (1-2) la maqueta blanca se ve gris. Si cambias de `flat` a tone mapping ACES, hay que
 reajustarlas.
 
-## El carrusel 3D de proyectos (rama experimental)
-
-> Esta sección vive en la rama `feature/carrusel-3d-proyectos`. No está en `main`.
+## El carrusel 3D de proyectos
 
 En `/portfolio`, arriba de la grilla: un **anillo de maquetas 3D giratorias**, una por
 proyecto, cada una con su **placa de título debajo**. La que está al frente sale con un
@@ -168,12 +174,24 @@ Tres ajustes hacen que el fondo no compita con el frente:
   hacia atrás y su placa se leería del revés.
 - **El halo y la escala** solo los tiene la pieza que está al frente (ver más abajo).
 
-La profundidad del anillo está comprimida (`RING_SQUASH`): un círculo perfecto dejaba las
-piezas traseras tan lejos que se volvían motas. Con el aplastamiento se acercan sin que el
-anillo deje de leerse, porque la cámara ya lo aplasta en perspectiva.
+El anillo es **circular**: se probó a comprimir su profundidad para acercar las piezas
+traseras, pero el arrastre dejaba de recorrer un círculo y se notaba raro. Las piezas de
+atrás se separan con la niebla y con la propia perspectiva.
 
 La cámara mira al **centro del anillo**, no a la pieza del frente, y el fov es contenido
 (32°) para que las piezas no se deformen.
+
+### Encuadre por pantalla
+
+Los números del encuadre viven en `CAROUSEL_LAYOUTS` (`carouselLayout.js`), con un preset
+`mobile` y otro `desktop`: los mismos valores no sirven para un contenedor apaisado de
+305 px y uno de móvil de 215 px (con el preset de escritorio, en móvil la cámara quedaba
+tan lejos que las maquetas se veían a un tercio). La escena elige el preset por el ancho
+del lienzo (768 px) y lo recalcula al redimensionar o girar el móvil, sin remontar nada.
+
+Cada preset ajusta el radio del anillo, la elevación de cámara, el aire lateral, las
+escalas de la pieza del frente y del resto, el levante y la atenuación. Las claves están
+documentadas en `carouselLayout.js`.
 
 ### Las maquetas
 
@@ -209,7 +227,8 @@ tienen `featured: false`.
 
 - **Click en una maqueta** para seleccionarla. El carrusel se recoloca solo, con
   amortiguación exponencial, así que cualquier salto (incluso de 4 puestos) se ve como
-  un giro suave.
+  un giro suave. El clic elige la pieza más cercana a la dirección en que se pulsa, no
+  la primera que toca el rayo: con la cámara baja las piezas se solapan.
 - **Arrastrar** en horizontal (ratón o dedo). Un arrastre de 110 px = una pieza.
   Mientras arrastras, **la pieza que entraría al soltar crece, se ilumina y empieza a
   girar**: el traspaso es continuo, no hay que adivinar qué se va a seleccionar.
@@ -224,6 +243,10 @@ No hay un estado de "seleccionada" por pieza. Cada una calcula su **énfasis** a
 su ángulo real (el de reposo más el giro del grupo): 1 cuando está en el frente, 0 cuando
 está a una pieza o más. De ahí salen la escala, el halo, la atenuación y el giro.
 
+Ese ángulo se **normaliza a (-π, π]** antes de medirlo (`shortestDelta`): el valor crudo
+acumula vueltas —al arrastrar una vuelta completa o al cruzar por detrás del anillo al
+cambiar de proyecto— y con 2π de más la pieza del frente se quedaba sin halo ni label.
+
 Eso hace que el arrastre funcione solo: la pieza que va llegando al centro crece de forma
 continua sin necesidad de estado de React por fotograma.
 
@@ -232,7 +255,7 @@ amortiguación** que usan las piezas para recolocarse. Como van a la par, la pos
 resultante se mantiene continua. Si se reseteara de golpe (como estaba antes), el
 carrusel daría un tirón de una pieza entera.
 
-### Cinco cosas que conviene no romper
+### Seis cosas que conviene no romper
 
 1. **`carouselLayout.js` no debe importar three.js.** Lo usa también la sección, para
    saber cuánto hay que arrastrar por paso. Si importara three, la librería entraría en
@@ -255,6 +278,12 @@ carrusel daría un tirón de una pieza entera.
 5. **Los props de transformación de R3F se reaplican.** Por eso `position`, `rotation-y` y
    `scale` se pasan con valores iniciales fijos y todo el movimiento lo hace `useFrame`:
    si cambiaran al cambiar de proyecto, R3F los reaplicaría y pisaría la animación.
+6. **El clic de las piezas se resuelve por cercanía angular, no por el raycaster.** Con
+   la cámara baja las piezas se solapan en pantalla y las cajas de clic de las del frente
+   tapan a las de atrás: pulsar una pieza del fondo seleccionaba a su vecina y parecía
+   que "solo funcionaban las primeras". `handlePieceClick` compara el ángulo de cada
+   pieza con el rayo pulsado y se queda con el menor. Volver al raycaster reintroduce el
+   bug.
 
 ### Sin WebGL
 

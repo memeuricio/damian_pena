@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Grid, Html } from '@react-three/drei';
 import * as THREE from 'three';
-import { PLAN, TIMELINE, wallToBox, wallToDrawSegments } from './housePlan';
+import { PLAN, TIMELINE, openingsByWall, solidWallPieces, wallToBox, wallToDrawSegments } from './housePlan';
 
 const clamp01 = (value) => Math.min(1, Math.max(0, value));
 const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
@@ -13,7 +13,7 @@ const LABEL_HEIGHT = PLAN.wallHeight * 0.62;
 function Model({ active, reducedMotion, replayToken }) {
   const elapsed = useRef(0);
   const activeRef = useRef(active);
-  const wallRefs = useRef([]);
+  const itemRefs = useRef([]);
   const linesRef = useRef(null);
   const labelRefs = useRef([]);
 
@@ -29,29 +29,107 @@ function Model({ active, reducedMotion, replayToken }) {
 
   /* ---------------------------------------------------------------- muros */
 
-  const walls = useMemo(
+  // Cada muro se parte por sus aberturas: un muro con puerta o ventana pasa a
+  // tener varios tramos sólidos que se levantan a la vez (mismo escalón).
+  const wallGroups = useMemo(
     () =>
-      PLAN.walls.map((segment) => {
-        const box = wallToBox(segment, PLAN.wallThickness);
+      solidWallPieces().map((pieces) =>
+        pieces.map((piece) => {
+          const box = wallToBox(piece, PLAN.wallThickness);
 
-        // La geometría se desplaza para que su origen quede en la base: así
-        // scale.y la hace crecer hacia arriba en vez de hacia ambos lados.
-        const geometry = new THREE.BoxGeometry(box.length, PLAN.wallHeight, PLAN.wallThickness);
-        geometry.translate(0, PLAN.wallHeight / 2, 0);
+          // La geometría se desplaza para que su origen quede en la base: así
+          // scale.y la hace crecer hacia arriba en vez de hacia ambos lados.
+          const geometry = new THREE.BoxGeometry(box.length, PLAN.wallHeight, PLAN.wallThickness);
+          geometry.translate(0, PLAN.wallHeight / 2, 0);
 
-        return { ...box, geometry, edges: new THREE.EdgesGeometry(geometry) };
-      }),
+          return { ...box, geometry, edges: new THREE.EdgesGeometry(geometry) };
+        })
+      ),
     []
+  );
+
+  // Antepechos y vidrios de las ventanas. Las puertas quedan como hueco vacío.
+  const openingItems = useMemo(() => {
+    const items = [];
+    const byWall = openingsByWall();
+
+    PLAN.walls.forEach((segment, wallIndex) => {
+      const rotationY = wallToBox(segment, PLAN.wallThickness).rotationY;
+
+      for (const opening of byWall[wallIndex]) {
+        if (opening.type !== 'window') continue;
+
+        const gapLength = Math.hypot(opening.x2 - opening.x1, opening.z2 - opening.z1);
+        const midX = (opening.x1 + opening.x2) / 2;
+        const midZ = (opening.z1 + opening.z2) / 2;
+
+        // Un pelín más corto que el hueco para no pelear con los extremos de
+        // los muros (que se alargan media pared por lado).
+        const width = Math.max(gapLength - PLAN.wallThickness - 0.02, 0.01);
+
+        const baseGeometry = new THREE.BoxGeometry(width, PLAN.windowSill, PLAN.wallThickness);
+        baseGeometry.translate(0, PLAN.windowSill / 2, 0);
+
+        const glassHeight = PLAN.wallHeight - PLAN.windowSill;
+        const glassGeometry = new THREE.BoxGeometry(width, glassHeight, PLAN.wallThickness * 0.65);
+        // El vidrio arranca un poco por debajo del antepecho para que las caras
+        // coincidentes no hagan z-fighting con la cara superior del antepecho.
+        glassGeometry.translate(0, PLAN.windowSill - 0.02 + glassHeight / 2, 0);
+
+        items.push(
+          {
+            wallIndex,
+            kind: 'sill',
+            position: [midX, 0, midZ],
+            rotationY,
+            geometry: baseGeometry,
+            edges: new THREE.EdgesGeometry(baseGeometry),
+          },
+          {
+            wallIndex,
+            kind: 'glass',
+            position: [midX, 0, midZ],
+            rotationY,
+            geometry: glassGeometry,
+            edges: new THREE.EdgesGeometry(glassGeometry),
+          }
+        );
+      }
+    });
+
+    return items;
+  }, []);
+
+  // Lista plana de piezas a renderizar, con el índice de su muro para el escalón.
+  const renderItems = useMemo(() => {
+    const items = [];
+    wallGroups.forEach((group, wallIndex) => {
+      group.forEach((item) => items.push({ ...item, wallIndex }));
+    });
+    openingItems.forEach((item) => items.push(item));
+    return items;
+  }, [wallGroups, openingItems]);
+
+  // Índices de las piezas de cada muro, para levantarlas con el mismo escalón.
+  const wallItemIndices = useMemo(() => {
+    const map = {};
+    renderItems.forEach((item, index) => {
+      if (!map[item.wallIndex]) map[item.wallIndex] = [];
+      map[item.wallIndex].push(index);
+    });
+    return map;
+  }, [renderItems]);
+
+  const geometries = useMemo(
+    () => renderItems.flatMap((item) => [item.geometry, item.edges]),
+    [renderItems]
   );
 
   useEffect(
     () => () => {
-      walls.forEach((wall) => {
-        wall.geometry.dispose();
-        wall.edges.dispose();
-      });
+      geometries.forEach((geometry) => geometry.dispose());
     },
-    [walls]
+    [geometries]
   );
 
   /* ------------------------------------------------------- trazado del plano */
@@ -60,11 +138,14 @@ function Model({ active, reducedMotion, replayToken }) {
     const positions = [];
 
     // Los muros se subdividen para que el trazado avance de forma continua:
-    // drawRange de three.js revela vértices, no fracciones de recta.
-    for (const segment of PLAN.walls) {
-      const points = wallToDrawSegments(segment);
-      for (let i = 0; i < points.length; i += 2) {
-        positions.push(points[i], 0.004, points[i + 1]);
+    // drawRange de three.js revela vértices, no fracciones de recta. Los huecos
+    // de puertas y ventanas no aportan vértices, así que el plano no los cruza.
+    for (const pieces of solidWallPieces()) {
+      for (const piece of pieces) {
+        const points = wallToDrawSegments(piece);
+        for (let i = 0; i < points.length; i += 2) {
+          positions.push(points[i], 0.004, points[i + 1]);
+        }
       }
     }
 
@@ -93,19 +174,21 @@ function Model({ active, reducedMotion, replayToken }) {
       linesRef.current.geometry.setDrawRange(0, lineCount);
     }
 
-    // Fase 2 — los muros se levantan, escalonados
-    const raiseTotal = TIMELINE.raise + TIMELINE.stagger * (walls.length - 1);
+    // Fase 2 — los muros se levantan, escalonados por muro original
+    const raiseTotal = TIMELINE.raise + TIMELINE.stagger * (wallGroups.length - 1);
 
-    for (let i = 0; i < walls.length; i++) {
-      const mesh = wallRefs.current[i];
-      if (!mesh) continue;
-
-      const start = TIMELINE.raiseStart + i * TIMELINE.stagger;
+    for (let wallIndex = 0; wallIndex < wallGroups.length; wallIndex++) {
+      const start = TIMELINE.raiseStart + wallIndex * TIMELINE.stagger;
       const progress = clamp01((time - start) / TIMELINE.raise);
       const scale = easeOutCubic(progress);
 
-      mesh.visible = progress > 0;
-      mesh.scale.y = Math.max(scale, 0.0001);
+      for (const itemIndex of wallItemIndices[wallIndex] ?? []) {
+        const mesh = itemRefs.current[itemIndex];
+        if (!mesh) continue;
+
+        mesh.visible = progress > 0;
+        mesh.scale.y = Math.max(scale, 0.0001);
+      }
     }
 
     // El plano se desvanece mientras los muros ocupan su lugar.
@@ -142,28 +225,39 @@ function Model({ active, reducedMotion, replayToken }) {
         <lineBasicMaterial color="#2563eb" transparent opacity={0.95} />
       </lineSegments>
 
-      {/* Muros */}
-      {walls.map((wall, index) => (
-        <mesh
-          key={index}
-          ref={(element) => {
-            wallRefs.current[index] = element;
-          }}
-          geometry={wall.geometry}
-          position={wall.position}
-          rotation-y={wall.rotationY}
-          scale-y={0.0001}
-          visible={false}
-          castShadow
-          receiveShadow
-        >
-          <meshStandardMaterial color="#ffffff" roughness={0.82} metalness={0} />
-          {/* Aristas marcadas: le da el aspecto de modelo técnico */}
-          <lineSegments geometry={wall.edges}>
-            <lineBasicMaterial color="#93c5fd" transparent opacity={0.85} />
-          </lineSegments>
-        </mesh>
-      ))}
+      {/* Muros (partidos por puertas y ventanas) */}
+      {renderItems.map((item, index) => {
+        const isGlass = item.kind === 'glass';
+
+        return (
+          <mesh
+            key={index}
+            ref={(element) => {
+              itemRefs.current[index] = element;
+            }}
+            geometry={item.geometry}
+            position={item.position}
+            rotation-y={item.rotationY}
+            scale-y={0.0001}
+            visible={false}
+            castShadow={!isGlass}
+            receiveShadow
+          >
+            <meshStandardMaterial
+              color={isGlass ? '#bae6fd' : '#ffffff'}
+              roughness={isGlass ? 0.15 : 0.82}
+              metalness={0}
+              transparent={isGlass}
+              opacity={isGlass ? 0.45 : 1}
+              depthWrite={!isGlass}
+            />
+            {/* Aristas marcadas: le da el aspecto de modelo técnico */}
+            <lineSegments geometry={item.edges}>
+              <lineBasicMaterial color="#93c5fd" transparent opacity={isGlass ? 0.6 : 0.85} />
+            </lineSegments>
+          </mesh>
+        );
+      })}
 
       {/* Recintos */}
       {PLAN.rooms.map((room, index) => (

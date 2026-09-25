@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import {
@@ -11,14 +11,8 @@ import {
 } from './projectIcons';
 import ProjectModel from './projectModels';
 import {
-  CAMERA_ELEVATION,
-  OTHER_SCALE,
-  OTHER_TINT,
-  RADIUS,
-  RING_DEPTH,
-  SELECTED_LIFT,
-  SELECTED_SCALE,
   carouselBounds,
+  carouselLayoutFor,
   carouselTargets,
 } from './carouselLayout';
 
@@ -89,6 +83,8 @@ function Item({
   hovered,
   setHovered,
   reducedMotion,
+  positionsRef,
+  layout,
 }) {
   const group = useRef(null);
   const spinner = useRef(null);
@@ -96,8 +92,9 @@ function Item({
   const plaqueMaterial = useRef(null);
   const materials = useRef([]);
   const originalColors = useRef([]);
-  const tint = useRef(target.selected ? 1 : OTHER_TINT);
+  const tint = useRef(target.selected ? 1 : layout.otherTint);
   const spinFactor = useRef(0);
+  const worldPosition = useMemo(() => new THREE.Vector3(), []);
 
   /**
    * Ángulo actual de la pieza. Se interpola el ÁNGULO y de él sale la posición,
@@ -106,17 +103,17 @@ function Item({
    * otro se resuelve por el camino corto (ver shortestDelta).
    */
   const angle = useRef(target.angle);
-  const scale = useRef(target.selected ? SELECTED_SCALE : OTHER_SCALE);
-  const height = useRef(target.selected ? SELECTED_LIFT : 0);
+  const scale = useRef(target.selected ? layout.selectedScale : layout.otherScale);
+  const height = useRef(target.selected ? layout.selectedLift : 0);
 
   // Valores iniciales fijos: los props de transformación de R3F se reaplicarían
   // al cambiar de proyecto y pisarían la animación. Todo lo mueve useFrame.
   const [initial] = useState(() => ({
-    x: RADIUS * Math.sin(target.angle),
-    y: target.selected ? SELECTED_LIFT : 0,
-    z: RING_DEPTH * Math.cos(target.angle),
+    x: layout.radius * Math.sin(target.angle),
+    y: target.selected ? layout.selectedLift : 0,
+    z: layout.radius * Math.cos(target.angle),
     rotation: target.angle,
-    scale: target.selected ? SELECTED_SCALE : OTHER_SCALE,
+    scale: target.selected ? layout.selectedScale : layout.otherScale,
   }));
 
   /**
@@ -149,24 +146,33 @@ function Item({
      * (el suyo más el giro del grupo), así que al arrastrar la que va llegando al
      * centro crece de forma continua, y al soltar no hay salto: el grupo se
      * asienta con esta misma amortiguación.
+     *
+     * El ángulo se normaliza a (-π, π] antes de medirlo: el valor crudo acumula
+     * vueltas (al arrastrar una vuelta completa o al pasar por detrás del anillo
+     * al cambiar de proyecto), y con 2π de más la pieza del frente se quedaba sin
+     * halo y sin label.
      */
-    const worldAngle = angle.current + rotationRef.current;
+    const worldAngle = shortestDelta(0, angle.current + rotationRef.current);
     const proximity = clamp01(1 - Math.abs(worldAngle) / (step || 1));
     const emphasis = proximity * proximity * (3 - 2 * proximity); // smoothstep
 
     const targetScale =
-      OTHER_SCALE + (SELECTED_SCALE - OTHER_SCALE) * emphasis + (hovered ? 0.05 : 0);
-    const targetHeight = SELECTED_LIFT * emphasis + (hovered ? 0.05 : 0);
-    const targetTint = OTHER_TINT + (1 - OTHER_TINT) * emphasis;
+      layout.otherScale + (layout.selectedScale - layout.otherScale) * emphasis + (hovered ? 0.05 : 0);
+    const targetHeight = layout.selectedLift * emphasis + (hovered ? 0.05 : 0);
+    const targetTint = layout.otherTint + (1 - layout.otherTint) * emphasis;
 
     scale.current += (targetScale - scale.current) * k;
     height.current += (targetHeight - height.current) * k;
 
-    node.position.x = RADIUS * Math.sin(angle.current);
-    node.position.z = RING_DEPTH * Math.cos(angle.current);
+    node.position.x = layout.radius * Math.sin(angle.current);
+    node.position.z = layout.radius * Math.cos(angle.current);
     node.position.y = height.current;
     node.rotation.y = angle.current;
     node.scale.setScalar(scale.current);
+
+    // Posición de mundo actual: la usa la selección por cercanía al hacer clic.
+    node.getWorldPosition(worldPosition);
+    positionsRef.current[index] = worldPosition;
 
     // El giro de la maqueta sigue al énfasis: arranca y se detiene solo.
     spinFactor.current +=
@@ -254,7 +260,7 @@ function Item({
           event.stopPropagation();
           // Si se venía arrastrando, el clic no cuenta como selección.
           if (draggingRef?.current) return;
-          onSelect(index);
+          onSelect(event, index);
         }}
         onPointerOver={(event) => {
           event.stopPropagation();
@@ -271,7 +277,7 @@ function Item({
 
 /* ----------------------------------------------------------- grupo giratorio */
 
-function Turntable({ dragRef, rotationRef, children }) {
+function Turntable({ dragRef, rotationRef, layout, children }) {
   const group = useRef(null);
 
   useFrame((_, delta) => {
@@ -296,7 +302,7 @@ function Turntable({ dragRef, rotationRef, children }) {
   });
 
   return (
-    <group ref={group} position={[0, 0, -RING_DEPTH]}>
+    <group ref={group} position={[0, 0, -layout.radius]}>
       {children}
     </group>
   );
@@ -304,7 +310,7 @@ function Turntable({ dragRef, rotationRef, children }) {
 
 /* ------------------------------------------------------------------- cámara */
 
-function ResponsiveCamera({ halfWidth, halfHeight, lookAtY, lookAtZ, fogRef }) {
+function ResponsiveCamera({ halfWidth, halfHeight, lookAtY, lookAtZ, elevation, fogRef }) {
   const camera = useThree((state) => state.camera);
   const size = useThree((state) => state.size);
 
@@ -328,8 +334,8 @@ function ResponsiveCamera({ halfWidth, halfHeight, lookAtY, lookAtZ, fogRef }) {
   useFrame(() => {
     camera.position.set(
       0,
-      lookAtY + distance * Math.sin(CAMERA_ELEVATION),
-      lookAtZ + distance * Math.cos(CAMERA_ELEVATION)
+      lookAtY + distance * Math.sin(elevation),
+      lookAtZ + distance * Math.cos(elevation)
     );
     camera.lookAt(0, lookAtY, lookAtZ);
 
@@ -358,7 +364,20 @@ function Scene({
   reducedMotion,
 }) {
   const gl = useThree((state) => state.gl);
+  const camera = useThree((state) => state.camera);
+  const size = useThree((state) => state.size);
   const [hovered, setHovered] = useState(null);
+
+  /**
+   * Preset de encuadre según el ancho del lienzo (ver carouselLayout.js). Se
+   * recalcula al redimensionar o girar el móvil, sin remontar la escena.
+   */
+  const layout = useMemo(() => carouselLayoutFor(size.width), [size.width]);
+
+  // Posición de mundo de cada pieza, actualizada por su useFrame.
+  const positionsRef = useRef([]);
+  const clickDirection = useMemo(() => new THREE.Vector3(), []);
+  const pieceDirection = useMemo(() => new THREE.Vector3(), []);
 
   // Giro real del grupo: lo escribe Turntable y lo leen las piezas para saber
   // cuán cerca están del frente.
@@ -372,12 +391,58 @@ function Scene({
     onHoverChange?.(index !== null);
   };
 
-  const targets = useMemo(
-    () => carouselTargets(projects.length, selectedIndex),
-    [projects.length, selectedIndex]
+  /**
+   * Selección por cercanía angular.
+   *
+   * Las piezas se solapan al mirarlas casi de frente, así que el raycaster
+   * encuentra primero la del frente aunque el puntero apunte a otra: con las
+   * cajas de clic, pulsar una pieza del fondo seleccionaba a su vecina. Aquí se
+   * elige la pieza cuya dirección, vista desde la cámara, está más cerca de la
+   * dirección pulsada —medida como ángulo, no en píxeles—, que es la que el
+   * visitante apunta con el cursor.
+   */
+  const handlePieceClick = useCallback(
+    (event, index) => {
+      const { pointer } = event;
+
+      clickDirection
+        .set(pointer.x, pointer.y, 0.5)
+        .unproject(camera)
+        .sub(camera.position)
+        .normalize();
+
+      let bestIndex = index;
+      let bestAngle = Infinity;
+
+      positionsRef.current.forEach((position, pieceIndex) => {
+        if (!position) return;
+
+        pieceDirection.copy(position);
+        // El centro visible de la maqueta está por encima de su base.
+        pieceDirection.y += 0.45;
+        pieceDirection.sub(camera.position).normalize();
+
+        const angle = pieceDirection.angleTo(clickDirection);
+        if (angle < bestAngle) {
+          bestAngle = angle;
+          bestIndex = pieceIndex;
+        }
+      });
+
+      onSelect(bestIndex);
+    },
+    [camera, clickDirection, pieceDirection, onSelect]
   );
 
-  const bounds = useMemo(() => carouselBounds(projects.length), [projects.length]);
+  const targets = useMemo(
+    () => carouselTargets(projects.length, selectedIndex, layout),
+    [projects.length, selectedIndex, layout]
+  );
+
+  const bounds = useMemo(
+    () => carouselBounds(projects.length, layout),
+    [projects.length, layout]
+  );
 
   const textures = useMemo(() => {
     const anisotropy = gl.capabilities.getMaxAnisotropy();
@@ -408,6 +473,7 @@ function Scene({
         halfHeight={bounds.halfHeight}
         lookAtY={bounds.lookAtY}
         lookAtZ={bounds.lookAtZ}
+        elevation={layout.cameraElevation}
         fogRef={fogRef}
       />
 
@@ -421,7 +487,7 @@ function Scene({
       <directionalLight position={[6, 12, 8]} intensity={2.8} />
       <directionalLight position={[-8, 6, -4]} intensity={0.9} />
 
-      <Turntable dragRef={dragRef} rotationRef={rotationRef}>
+      <Turntable dragRef={dragRef} rotationRef={rotationRef} layout={layout}>
         {projects.map((project, index) => (
           <Item
             key={project.id}
@@ -433,11 +499,13 @@ function Scene({
             target={targets[index]}
             step={step}
             rotationRef={rotationRef}
-            onSelect={onSelect}
+            onSelect={handlePieceClick}
             draggingRef={draggingRef}
             hovered={hovered === index}
             setHovered={handleHover}
             reducedMotion={reducedMotion}
+            positionsRef={positionsRef}
+            layout={layout}
           />
         ))}
       </Turntable>
