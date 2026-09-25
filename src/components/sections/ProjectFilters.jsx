@@ -28,16 +28,16 @@ export default function ProjectFilters({
             onClick={() => onCategoryChange(category.key)}
             className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
               isActive
-                ? 'bg-accent-600 text-white shadow-md'
-                : 'bg-surface-100 text-primary-700 hover:bg-surface-200 hover:text-primary-900'
+                ? 'bg-cyan-400 text-slate-900 shadow-md'
+                : 'bg-white/5 text-slate-300 ring-1 ring-white/10 hover:bg-white/10 hover:text-white'
             }`}
           >
             {category.label}
             {count > 0 && (
               <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${
                 isActive
-                  ? 'bg-accent-500 text-white'
-                  : 'bg-surface-200 text-primary-600'
+                  ? 'bg-slate-900/15 text-slate-900'
+                  : 'bg-white/10 text-slate-300'
               }`}>
                 {count}
               </span>

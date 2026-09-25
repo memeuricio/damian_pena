@@ -22,17 +22,17 @@ export default function Footer() {
   ].filter(Boolean);
 
   return (
-    <footer className="bg-primary-900 text-white">
+    <footer className="border-t border-white/10 bg-black/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Brand */}
           <div className="col-span-1">
-            <h3 className="text-xl font-bold mb-1">{fullName}</h3>
-            <p className="text-sm text-primary-400 mb-4">{title}</p>
-            <p className="text-gray-300 mb-4">
+            <h3 className="text-xl font-bold text-white mb-1">{fullName}</h3>
+            <p className="text-sm text-slate-400 mb-4">{title}</p>
+            <p className="text-slate-300 mb-4">
               Dibujante Arquitectónico Titulado especializado en proyectos residenciales y comerciales.
             </p>
-            <div className="space-y-2 text-sm text-gray-300">
+            <div className="space-y-2 text-sm text-slate-300">
               <p>
                 📧 <a href={`mailto:${email}`} className="hover:text-white">{email}</a>
               </p>
@@ -45,13 +45,13 @@ export default function Footer() {
 
           {/* Navigation Links */}
           <div className="col-span-1">
-            <h4 className="text-lg font-semibold mb-4">Navegación</h4>
+            <h4 className="text-lg font-semibold text-white mb-4">Navegación</h4>
             <ul className="space-y-2">
               {footerLinks.map((link) => (
                 <li key={link.path}>
                   <Link
                     to={link.path}
-                    className="text-gray-300 hover:text-white transition-colors duration-200"
+                    className="text-slate-300 hover:text-white transition-colors duration-200"
                   >
                     {link.label}
                   </Link>
@@ -62,8 +62,8 @@ export default function Footer() {
 
           {/* Services */}
           <div className="col-span-1">
-            <h4 className="text-lg font-semibold mb-4">Servicios</h4>
-            <ul className="space-y-2 text-gray-300">
+            <h4 className="text-lg font-semibold text-white mb-4">Servicios</h4>
+            <ul className="space-y-2 text-slate-300">
               {mockServices.map((service) => (
                 <li key={service.id}>
                   <Link
@@ -79,8 +79,8 @@ export default function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-primary-800 mt-8 pt-8 flex flex-col sm:flex-row justify-between items-center">
-          <p className="text-gray-400 text-sm">
+        <div className="border-t border-white/10 mt-8 pt-8 flex flex-col sm:flex-row justify-between items-center">
+          <p className="text-slate-400 text-sm">
             © {currentYear} {fullName}. Todos los derechos reservados.
           </p>
 
@@ -90,7 +90,7 @@ export default function Footer() {
                 <a
                   key={social.name}
                   href={social.url}
-                  className="text-gray-400 hover:text-white transition-colors duration-200"
+                  className="text-slate-400 hover:text-white transition-colors duration-200"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={social.name}

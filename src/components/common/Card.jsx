@@ -5,7 +5,7 @@ export default function Card({
   padding = 'default',
   onClick 
 }) {
-  const baseClasses = 'bg-white rounded-lg border border-surface-200 shadow-sm';
+  const baseClasses = 'bg-panel rounded-lg border border-white/10 shadow-lg';
   
   const hoverClasses = hover 
     ? 'hover:shadow-md hover:border-surface-300 transition-all duration-200 cursor-pointer' 

@@ -55,7 +55,7 @@ function ProjectSpotlight({ project }) {
     <div
       // La key remonta el bloque al cambiar de proyecto, así se ve la transición.
       key={project.id}
-      className="animate-fade-in mt-10 grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-10 items-center rounded-2xl border border-surface-200 bg-white p-5 sm:p-8 shadow-sm"
+      className="animate-fade-in mt-10 grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-10 items-center rounded-2xl border border-black/10 bg-panel p-5 sm:p-8 shadow-lg"
     >
       {/* Imagen */}
       <div className="lg:col-span-2">
@@ -73,10 +73,10 @@ function ProjectSpotlight({ project }) {
               <svg className="h-10 w-10 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-              <p className="text-sm text-primary-500">Sin imágenes todavía</p>
+              <p className="text-sm text-primary-700">Sin imágenes todavía</p>
             </div>
           )}
-          <span className="absolute left-3 top-3 inline-flex items-center rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-sky-700 shadow-sm">
+          <span className="absolute left-3 top-3 inline-flex items-center rounded-full bg-panel/95 px-3 py-1 text-xs font-semibold text-sky-900 shadow-sm">
             {getCategoryLabel(project.category)}
           </span>
         </div>
@@ -97,7 +97,7 @@ function ProjectSpotlight({ project }) {
           {project.title}
         </h3>
 
-        <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-primary-600">
+        <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-primary-700">
           <span className="flex items-center gap-1.5">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -285,16 +285,16 @@ export default function ProjectCarousel({ projects }) {
   if (!selectedProject) return null;
 
   return (
-    <section className="py-16 sm:py-20 bg-gradient-to-br from-surface-50 via-white to-sky-50">
+    <section className="py-16 sm:py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8">
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-accent-100 text-accent-700 mb-4">
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-cyan-400/10 text-cyan-300 ring-1 ring-cyan-400/20 mb-4">
             Carrusel 3D
           </span>
-          <h2 className="text-3xl sm:text-4xl font-bold text-primary-900 mb-4">
+          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
             Explora los proyectos
           </h2>
-          <p className="text-lg text-primary-600 max-w-2xl mx-auto">
+          <p className="text-lg text-slate-300 max-w-2xl mx-auto">
             Toca una maqueta para ver su ficha, o arrastra para recorrer el carrusel.
             Abajo verás el detalle del proyecto seleccionado.
           </p>
@@ -309,7 +309,7 @@ export default function ProjectCarousel({ projects }) {
             tabIndex={0}
             onKeyDown={handleKeyDown}
             onPointerDown={handlePointerDown}
-            className={`relative h-[215px] sm:h-[265px] lg:h-[305px] rounded-2xl border border-surface-200 bg-gradient-to-b from-surface-100 to-sky-50 shadow-sm overflow-hidden active:cursor-grabbing focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500 ${
+            className={`relative h-[215px] sm:h-[265px] lg:h-[305px] rounded-2xl border border-black/10 bg-panel-sunken bg-gradient-to-b from-panel-sunken to-panel shadow-lg overflow-hidden active:cursor-grabbing focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
               hoveringPiece ? 'cursor-pointer' : 'cursor-grab'
             }`}
           >
@@ -317,7 +317,7 @@ export default function ProjectCarousel({ projects }) {
               <ErrorBoundary fallback={<FallbackSelector projects={projects} selectedIndex={selectedIndex} onSelect={selectTo} />}>
                 <Suspense
                   fallback={
-                    <div className="flex h-full items-center justify-center text-sm text-primary-400">
+                    <div className="flex h-full items-center justify-center text-sm text-primary-800">
                       Cargando selector…
                     </div>
                   }
@@ -345,7 +345,7 @@ export default function ProjectCarousel({ projects }) {
               type="button"
               onClick={() => setSelectedIndex((current) => ((current - 1) % count + count) % count)}
               aria-label="Proyecto anterior"
-              className="absolute left-3 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full border border-surface-200 bg-white/90 text-primary-600 shadow-sm transition-colors hover:text-accent-600 hover:border-accent-200"
+              className="absolute left-3 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-panel/95 text-primary-700 shadow-lg transition-colors hover:text-accent-800 hover:border-accent-300"
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M15 19l-7-7 7-7" />
@@ -355,7 +355,7 @@ export default function ProjectCarousel({ projects }) {
               type="button"
               onClick={() => setSelectedIndex((current) => ((current + 1) % count + count) % count)}
               aria-label="Proyecto siguiente"
-              className="absolute right-3 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full border border-surface-200 bg-white/90 text-primary-600 shadow-sm transition-colors hover:text-accent-600 hover:border-accent-200"
+              className="absolute right-3 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-panel/95 text-primary-700 shadow-lg transition-colors hover:text-accent-800 hover:border-accent-300"
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M9 5l7 7-7 7" />
@@ -379,15 +379,15 @@ export default function ProjectCarousel({ projects }) {
                 aria-current={index === selectedIndex}
                 className={`h-2 rounded-full transition-all duration-200 ${
                   index === selectedIndex
-                    ? 'w-8 bg-accent-600'
-                    : 'w-2 bg-surface-300 hover:bg-surface-400'
+                    ? 'w-8 bg-cyan-400'
+                    : 'w-2 bg-white/25 hover:bg-white/40'
                 }`}
               />
             ))}
           </div>
 
           {!reducedMotion && sceneReady && (
-            <p className="mt-3 text-center text-xs text-primary-400">
+            <p className="mt-3 text-center text-xs text-slate-400">
               {projects.length} proyectos · toca una maqueta o arrastra para girar
             </p>
           )}

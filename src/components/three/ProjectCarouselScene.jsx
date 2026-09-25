@@ -32,8 +32,8 @@ const SPIN_DAMPING = 3.5;
 const PLAQUE_FADE_FROM = 0.87; // 50°
 const PLAQUE_FADE_TO = 1.66; // 95°
 
-/** Color de la niebla: debe parecerse al fondo del contenedor. */
-const FOG_COLOR = '#eef5fc';
+/** Color de la niebla: debe coincidir con el fondo del contenedor (panel-sunken). */
+const FOG_COLOR = '#93a6c0';
 
 /**
  * Configuración de cámara estable a nivel de módulo: si este objeto se creara
@@ -83,7 +83,6 @@ function Item({
   hovered,
   setHovered,
   reducedMotion,
-  positionsRef,
   layout,
 }) {
   const group = useRef(null);
@@ -94,7 +93,6 @@ function Item({
   const originalColors = useRef([]);
   const tint = useRef(target.selected ? 1 : layout.otherTint);
   const spinFactor = useRef(0);
-  const worldPosition = useMemo(() => new THREE.Vector3(), []);
 
   /**
    * Ángulo actual de la pieza. Se interpola el ÁNGULO y de él sale la posición,
@@ -169,10 +167,6 @@ function Item({
     node.position.y = height.current;
     node.rotation.y = angle.current;
     node.scale.setScalar(scale.current);
-
-    // Posición de mundo actual: la usa la selección por cercanía al hacer clic.
-    node.getWorldPosition(worldPosition);
-    positionsRef.current[index] = worldPosition;
 
     // El giro de la maqueta sigue al énfasis: arranca y se detiene solo.
     spinFactor.current +=
@@ -253,14 +247,17 @@ function Item({
         />
       </mesh>
 
-      {/* Zona de clic: invisible, pero recibe el puntero en toda la pieza */}
+      {/* Zona de clic: invisible, pero recibe el puntero en toda la pieza.
+          Va ajustada al tamaño real de la pieza a propósito: con una caja más
+          grande, las de las piezas vecinas se solapan y el raycaster acaba
+          entregando el clic a la que no toca. */}
       <mesh
-        position={[0, 0.35, 0]}
+        position={[0, 0.28, 0]}
         onClick={(event) => {
           event.stopPropagation();
           // Si se venía arrastrando, el clic no cuenta como selección.
           if (draggingRef?.current) return;
-          onSelect(event, index);
+          onSelect(index);
         }}
         onPointerOver={(event) => {
           event.stopPropagation();
@@ -268,7 +265,7 @@ function Item({
         }}
         onPointerOut={() => setHovered(null)}
       >
-        <boxGeometry args={[1.05, 1.6, 0.95]} />
+        <boxGeometry args={[0.84, 1.1, 0.78]} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} colorWrite={false} />
       </mesh>
     </group>
@@ -364,7 +361,6 @@ function Scene({
   reducedMotion,
 }) {
   const gl = useThree((state) => state.gl);
-  const camera = useThree((state) => state.camera);
   const size = useThree((state) => state.size);
   const [hovered, setHovered] = useState(null);
 
@@ -373,11 +369,6 @@ function Scene({
    * recalcula al redimensionar o girar el móvil, sin remontar la escena.
    */
   const layout = useMemo(() => carouselLayoutFor(size.width), [size.width]);
-
-  // Posición de mundo de cada pieza, actualizada por su useFrame.
-  const positionsRef = useRef([]);
-  const clickDirection = useMemo(() => new THREE.Vector3(), []);
-  const pieceDirection = useMemo(() => new THREE.Vector3(), []);
 
   // Giro real del grupo: lo escribe Turntable y lo leen las piezas para saber
   // cuán cerca están del frente.
@@ -392,46 +383,19 @@ function Scene({
   };
 
   /**
-   * Selección por cercanía angular.
+   * El clic lo resuelve el propio raycaster: se selecciona la pieza que está
+   * bajo el cursor, y si varias se solapan, la que está más adelante — que es
+   * la que el visitante ve.
    *
-   * Las piezas se solapan al mirarlas casi de frente, así que el raycaster
-   * encuentra primero la del frente aunque el puntero apunte a otra: con las
-   * cajas de clic, pulsar una pieza del fondo seleccionaba a su vecina. Aquí se
-   * elige la pieza cuya dirección, vista desde la cámara, está más cerca de la
-   * dirección pulsada —medida como ángulo, no en píxeles—, que es la que el
-   * visitante apunta con el cursor.
+   * Antes había aquí una selección por cercanía angular que ignoraba la
+   * profundidad: con el anillo casi de frente, dos piezas caen en direcciones
+   * muy parecidas y a veces ganaba la de atrás, así que pulsando una se
+   * seleccionaba la siguiente. La ambigüedad se resuelve ahora con cajas de
+   * clic ajustadas al tamaño real de cada pieza (ver el Item).
    */
   const handlePieceClick = useCallback(
-    (event, index) => {
-      const { pointer } = event;
-
-      clickDirection
-        .set(pointer.x, pointer.y, 0.5)
-        .unproject(camera)
-        .sub(camera.position)
-        .normalize();
-
-      let bestIndex = index;
-      let bestAngle = Infinity;
-
-      positionsRef.current.forEach((position, pieceIndex) => {
-        if (!position) return;
-
-        pieceDirection.copy(position);
-        // El centro visible de la maqueta está por encima de su base.
-        pieceDirection.y += 0.45;
-        pieceDirection.sub(camera.position).normalize();
-
-        const angle = pieceDirection.angleTo(clickDirection);
-        if (angle < bestAngle) {
-          bestAngle = angle;
-          bestIndex = pieceIndex;
-        }
-      });
-
-      onSelect(bestIndex);
-    },
-    [camera, clickDirection, pieceDirection, onSelect]
+    (index) => onSelect(index),
+    [onSelect]
   );
 
   const targets = useMemo(
@@ -504,7 +468,6 @@ function Scene({
             hovered={hovered === index}
             setHovered={handleHover}
             reducedMotion={reducedMotion}
-            positionsRef={positionsRef}
             layout={layout}
           />
         ))}

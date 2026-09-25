@@ -47,6 +47,7 @@ export default function PlanToBuilding() {
   const [isVisible, setIsVisible] = useState(() => typeof IntersectionObserver === 'undefined');
   const [sceneReady, setSceneReady] = useState(false);
   const [replayToken, setReplayToken] = useState(0);
+  const [showPlan, setShowPlan] = useState(false);
   const containerRef = useRef(null);
 
   const handleSceneReady = useCallback(() => setSceneReady(true), []);
@@ -73,17 +74,17 @@ export default function PlanToBuilding() {
   const showScene = webglSupported && shouldLoad;
 
   return (
-    <section id="plano-a-obra" className="py-16 sm:py-24 bg-gradient-to-br from-sky-50 via-surface-50 to-white">
+    <section id="plano-a-obra" className="py-16 sm:py-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Encabezado */}
         <div className="text-center mb-12">
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-accent-100 text-accent-700 mb-4">
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-cyan-400/10 text-cyan-300 ring-1 ring-cyan-400/20 mb-4">
             Modelado 3D
           </span>
-          <h2 className="text-3xl sm:text-4xl font-bold text-primary-900 mb-4">
+          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
             Del plano a la obra
           </h2>
-          <p className="text-lg text-primary-600 max-w-2xl mx-auto">
+          <p className="text-lg text-slate-300 max-w-2xl mx-auto">
             Así es como tu idea se convierte en un proyecto construible: parto del
             levantamiento, dibujo el plano técnico y lo modelo en 3D para revisar
             cada detalle antes de llegar a la obra.
@@ -95,9 +96,9 @@ export default function PlanToBuilding() {
           <div className="lg:col-span-3">
             <div
               ref={containerRef}
-              className="relative h-[380px] sm:h-[460px] lg:h-[540px] rounded-2xl border border-surface-200 bg-gradient-to-b from-surface-100 to-sky-50 shadow-sm overflow-hidden"
+              className="relative h-[380px] sm:h-[460px] lg:h-[540px] rounded-2xl border border-black/10 bg-panel-sunken bg-gradient-to-b from-panel-sunken to-panel shadow-lg overflow-hidden"
             >
-              {showScene ? (
+              {showScene && !showPlan ? (
                 <ErrorBoundary fallback={<StaticPlan />}>
                   <Suspense fallback={<StaticPlan />}>
                     <BuildingScene
@@ -112,31 +113,50 @@ export default function PlanToBuilding() {
                 <StaticPlan />
               )}
 
-              {/* Pista de interacción: solo si el visor llegó a montarse */}
-              {sceneReady && (
-                <div className="pointer-events-none absolute bottom-4 left-4 flex items-center gap-2 rounded-full bg-white/90 px-3 py-1.5 text-xs font-medium text-primary-600 shadow-sm border border-surface-200">
-                  <svg className="h-4 w-4 text-accent-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  Arrastra para girar
-                </div>
+              {/*
+                Conmutador plano / modelo. Al volver al 3D la escena se remonta y
+                la animación se reproduce de nuevo, que es justo lo que se espera.
+              */}
+              {showScene && (
+                <button
+                  type="button"
+                  onClick={() => setShowPlan((value) => !value)}
+                  aria-pressed={showPlan}
+                  className="absolute bottom-4 left-4 inline-flex items-center gap-2 rounded-full bg-panel/95 px-3 py-1.5 text-xs font-medium text-primary-800 shadow-lg border border-black/10 transition-colors hover:text-accent-800 hover:border-accent-300"
+                >
+                  {showPlan ? (
+                    <>
+                      <svg className="h-4 w-4 text-accent-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                      </svg>
+                      Ver modelo 3D
+                    </>
+                  ) : (
+                    <>
+                      <svg className="h-4 w-4 text-accent-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18" />
+                      </svg>
+                      Cambiar a plano
+                    </>
+                  )}
+                </button>
               )}
 
-              {/* Repetir animación */}
-              {sceneReady && !reducedMotion && (
+              {/* Repetir animación: solo tiene sentido con el modelo a la vista */}
+              {sceneReady && !showPlan && !reducedMotion && (
                 <button
                   type="button"
                   onClick={() => setReplayToken((token) => token + 1)}
-                  className="absolute bottom-4 right-4 rounded-full bg-white/90 px-3 py-1.5 text-xs font-medium text-primary-600 shadow-sm border border-surface-200 transition-colors hover:text-accent-600 hover:border-accent-200"
+                  className="absolute bottom-4 right-4 rounded-full bg-panel/95 px-3 py-1.5 text-xs font-medium text-primary-800 shadow-lg border border-black/10 transition-colors hover:text-accent-800 hover:border-accent-300"
                 >
                   Repetir animación
                 </button>
               )}
             </div>
 
-            <p className="mt-3 text-center text-xs text-primary-500">
+            <p className="mt-3 text-center text-xs text-slate-400">
               Vivienda de ejemplo de {PLAN.width} × {PLAN.depth} m ·{' '}
-              {PLAN.width * PLAN.depth} m² construidos · muros a altura de corte
+              {PLAN.width * PLAN.depth} m² construidos · patio de {PLAN.patio.depth} m al fondo
             </p>
           </div>
 
@@ -145,12 +165,12 @@ export default function PlanToBuilding() {
             <ol className="space-y-6">
               {PROCESS_STEPS.map((step, index) => (
                 <li key={step.title} className="flex gap-4">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-100 text-sm font-bold text-accent-700">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-cyan-400/10 text-sm font-bold text-cyan-300 ring-1 ring-cyan-400/20">
                     {index + 1}
                   </span>
                   <div>
-                    <h3 className="font-semibold text-primary-900">{step.title}</h3>
-                    <p className="text-sm text-primary-600">{step.description}</p>
+                    <h3 className="font-semibold text-white">{step.title}</h3>
+                    <p className="text-sm text-slate-400">{step.description}</p>
                   </div>
                 </li>
               ))}
@@ -158,7 +178,7 @@ export default function PlanToBuilding() {
 
             <div className="mt-8">
               <Link to={ROUTES.CONTACT}>
-                <Button variant="primary" size="lg" className="w-full sm:w-auto">
+                <Button variant="light" size="lg" className="w-full sm:w-auto">
                   Cotizar mi proyecto
                 </Button>
               </Link>

@@ -16,7 +16,11 @@ const Button = forwardRef(({
   const variantClasses = {
     primary: 'bg-slate-900 text-white hover:bg-slate-800 hover:shadow-lg focus:ring-blue-500',
     secondary: 'bg-slate-100 text-slate-900 hover:bg-slate-200 hover:shadow-md focus:ring-blue-500 border border-slate-200',
-    outline: 'border-2 border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white hover:shadow-lg focus:ring-blue-500'
+    outline: 'border-2 border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white hover:shadow-lg focus:ring-blue-500',
+    // Para botones que van directamente sobre el espacio modelo oscuro: las
+    // variantes de arriba son oscuras sobre oscuro y desaparecerían.
+    light: 'bg-panel text-slate-900 hover:bg-white hover:shadow-lg focus:ring-cyan-400',
+    outlineLight: 'border-2 border-white/40 text-white hover:bg-white hover:text-slate-900 hover:shadow-lg focus:ring-cyan-400'
   };
   
   const sizeClasses = {

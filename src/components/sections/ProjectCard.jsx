@@ -49,7 +49,7 @@ export default function ProjectCard({ project, onClick }) {
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-sky-100 text-sky-800">
               {getCategoryLabel(project.category)}
             </span>
-            <span className="text-sm text-primary-500 font-medium">
+            <span className="text-sm text-primary-700 font-medium">
               {project.specifications.year}
             </span>
           </div>
@@ -64,11 +64,11 @@ export default function ProjectCard({ project, onClick }) {
             {project.title}
           </h3>
 
-          <p className="text-primary-600 text-sm mb-4 line-clamp-2">
+          <p className="text-primary-800 text-sm mb-4 line-clamp-2">
             {project.description}
           </p>
 
-          <div className="flex items-center justify-between text-sm text-primary-500">
+          <div className="flex items-center justify-between text-sm text-primary-700">
             {/* El área es opcional: solo se muestra si el dato existe. */}
             {project.specifications.area ? (
               <span className="flex items-center">
@@ -93,7 +93,7 @@ export default function ProjectCard({ project, onClick }) {
               {project.tags.slice(0, 3).map((tag) => (
                 <span
                   key={tag}
-                  className="inline-flex items-center px-2 py-1 rounded text-xs bg-surface-100 text-primary-600"
+                  className="inline-flex items-center px-2 py-1 rounded text-xs bg-surface-100 text-primary-800"
                 >
                   {tag}
                 </span>

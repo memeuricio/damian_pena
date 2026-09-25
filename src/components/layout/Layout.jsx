@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Navigation from './Navigation';
 import Footer from './Footer';
+import SiteBackground from './SiteBackground';
 
 /**
  * Al cambiar de página vuelve arriba. Sin esto, entrar al portafolio desde el
@@ -22,6 +23,8 @@ function ScrollToTop() {
 export default function Layout({ children }) {
   return (
     <div className="min-h-screen flex flex-col">
+      {/* Espacio modelo: va detrás de todo, con z-index negativo */}
+      <SiteBackground />
       <ScrollToTop />
       <Navigation />
       <main className="grow">

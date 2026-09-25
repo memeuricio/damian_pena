@@ -95,14 +95,14 @@ export default function ContactForm({ onSubmit, isLoading = false }) {
   // y no aparecía ninguna señal de que algo había ocurrido.
   if (isSubmitted) {
     return (
-      <div className="bg-gradient-to-br from-emerald-50 via-white to-sky-50 rounded-2xl shadow-sm border border-surface-200 p-8 text-center">
+      <div className="bg-panel rounded-2xl shadow-lg border border-black/10 p-8 text-center">
         <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         </div>
         <h2 className="text-2xl font-bold text-primary-900 mb-2">¡Mensaje enviado!</h2>
-        <p role="status" className="text-primary-600 mb-6">
+        <p role="status" className="text-primary-800 mb-6">
           Gracias por escribirme. Te responderé dentro de las próximas 24 horas.
         </p>
         <Button variant="outline" onClick={() => setIsSubmitted(false)}>
@@ -113,12 +113,12 @@ export default function ContactForm({ onSubmit, isLoading = false }) {
   }
 
   return (
-    <div className="bg-gradient-to-br from-emerald-50 via-white to-sky-50 rounded-2xl shadow-sm border border-surface-200 p-8">
+    <div className="bg-panel rounded-2xl shadow-lg border border-black/10 p-8">
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-primary-900 mb-2">
           Envíame un mensaje
         </h2>
-        <p className="text-primary-600">
+        <p className="text-primary-800">
           Cuéntame sobre tu proyecto y te contactaré en menos de 24 horas.
         </p>
       </div>
@@ -247,7 +247,7 @@ export default function ContactForm({ onSubmit, isLoading = false }) {
           {errors.message && (
             <p role="alert" className="mt-1 text-sm text-red-600">{errors.message}</p>
           )}
-          <p className="mt-1 text-sm text-primary-500">
+          <p className="mt-1 text-sm text-primary-700">
             {formData.message.length}/{MAX_MESSAGE_LENGTH} caracteres
           </p>
         </div>
@@ -268,7 +268,7 @@ export default function ContactForm({ onSubmit, isLoading = false }) {
           <p role="alert" className="text-sm text-red-600 text-center">{submitError}</p>
         )}
 
-        <p className="text-xs text-primary-500 text-center">
+        <p className="text-xs text-primary-700 text-center">
           * Campos requeridos. Tu información será tratada de forma confidencial.
         </p>
       </form>

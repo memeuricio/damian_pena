@@ -45,7 +45,7 @@ export default function ProjectDetail({ project, isOpen, onClose, onNavigate }) 
               <h2 className="text-2xl font-bold text-primary-900 mb-2">
                 {project.title}
               </h2>
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-primary-600">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-primary-800">
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
                   {getCategoryLabel(project.category)}
                 </span>
@@ -133,7 +133,7 @@ export default function ProjectDetail({ project, isOpen, onClose, onNavigate }) 
 
             {/* Image caption */}
             {!isImageZoomed && currentImage?.caption && (
-              <p className="text-sm text-primary-600 mt-2 text-center">
+              <p className="text-sm text-primary-800 mt-2 text-center">
                 {currentImage.caption}
               </p>
             )}
@@ -174,7 +174,7 @@ export default function ProjectDetail({ project, isOpen, onClose, onNavigate }) 
             <h3 className="text-lg font-semibold text-primary-900 mb-3">
               Descripción del Proyecto
             </h3>
-            <p className="text-primary-700 leading-relaxed mb-4">
+            <p className="text-primary-900 leading-relaxed mb-4">
               {project.description}
             </p>
 
@@ -186,7 +186,7 @@ export default function ProjectDetail({ project, isOpen, onClose, onNavigate }) 
                   {project.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-surface-100 text-primary-700"
+                      className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-surface-100 text-primary-900"
                     >
                       {tag}
                     </span>
@@ -205,26 +205,26 @@ export default function ProjectDetail({ project, isOpen, onClose, onNavigate }) 
               {/* Solo se listan los campos que existen: antes mostraba filas vacías. */}
               {project.specifications.area && (
                 <div className="flex justify-between items-center py-2 border-b border-surface-200">
-                  <span className="text-primary-600">Área:</span>
+                  <span className="text-primary-800">Área:</span>
                   <span className="font-medium text-primary-900">{project.specifications.area}</span>
                 </div>
               )}
               <div className="flex justify-between items-center py-2 border-b border-surface-200">
-                <span className="text-primary-600">Ubicación:</span>
+                <span className="text-primary-800">Ubicación:</span>
                 <span className="font-medium text-primary-900">{project.specifications.location}</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-surface-200">
-                <span className="text-primary-600">Año:</span>
+                <span className="text-primary-800">Año:</span>
                 <span className="font-medium text-primary-900">{project.specifications.year}</span>
               </div>
               {project.specifications.client && (
                 <div className="flex justify-between items-center py-2 border-b border-surface-200">
-                  <span className="text-primary-600">Cliente:</span>
+                  <span className="text-primary-800">Cliente:</span>
                   <span className="font-medium text-primary-900">{project.specifications.client}</span>
                 </div>
               )}
               <div className="flex justify-between items-center py-2">
-                <span className="text-primary-600">Categoría:</span>
+                <span className="text-primary-800">Categoría:</span>
                 <span className="font-medium text-primary-900">{getCategoryLabel(project.category)}</span>
               </div>
             </div>

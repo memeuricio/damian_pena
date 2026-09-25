@@ -83,10 +83,10 @@ export default function ContactInfo() {
     <div className="space-y-8">
       {/* Header */}
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-primary-900 mb-2">
+        <h2 className="text-2xl font-bold text-white mb-2">
           Información de Contacto
         </h2>
-        <p className="text-primary-600">
+        <p className="text-slate-300">
           Múltiples formas de comunicarte conmigo
         </p>
       </div>
@@ -94,9 +94,9 @@ export default function ContactInfo() {
       {/* Contact Methods */}
       <div className="space-y-6">
         {contactMethods.map((method) => (
-          <div key={method.title} className="bg-white rounded-xl border border-surface-200 p-6 shadow-sm hover:shadow-md transition-shadow">
+          <div key={method.title} className="bg-panel rounded-xl border border-black/10 p-6 shadow-lg hover:shadow-xl transition-shadow">
             <div className="flex items-start space-x-4">
-              <div className="w-12 h-12 bg-sky-100 rounded-lg flex items-center justify-center text-sky-600 shrink-0">
+              <div className="w-12 h-12 bg-panel-sunken rounded-lg flex items-center justify-center text-primary-700 shrink-0">
                 {method.icon}
               </div>
               
@@ -104,16 +104,16 @@ export default function ContactInfo() {
                 <h3 className="text-lg font-semibold text-primary-900 mb-1">
                   {method.title}
                 </h3>
-                <p className="text-primary-700 font-medium mb-1">
+                <p className="text-primary-900 font-medium mb-1">
                   {method.value}
                 </p>
-                <p className="text-sm text-primary-600 mb-3">
+                <p className="text-sm text-primary-800 mb-3">
                   {method.description}
                 </p>
                 
                 <a
                   href={method.action}
-                  className="inline-flex items-center text-accent-600 hover:text-accent-700 font-medium text-sm transition-colors"
+                  className="inline-flex items-center text-accent-800 hover:text-accent-700 font-medium text-sm transition-colors"
                   target={method.action.startsWith('http') ? '_blank' : undefined}
                   rel={method.action.startsWith('http') ? 'noopener noreferrer' : undefined}
                 >
@@ -130,7 +130,7 @@ export default function ContactInfo() {
 
       {/* Social Media */}
       {socialLinks.length > 0 && (
-        <div className="bg-gradient-to-br from-emerald-50 via-surface-50 to-sky-50 rounded-xl p-6">
+        <div className="bg-panel rounded-xl p-6 shadow-lg">
           <h3 className="text-lg font-semibold text-primary-900 mb-4 text-center">
             Sígueme en Redes Sociales
           </h3>
@@ -140,7 +140,7 @@ export default function ContactInfo() {
               <a
                 key={social.name}
                 href={social.url}
-                className={`w-12 h-12 bg-white rounded-lg border border-surface-200 flex items-center justify-center text-primary-400 ${social.color} transition-colors shadow-sm hover:shadow-md`}
+                className={`w-12 h-12 bg-panel rounded-lg border border-black/10 flex items-center justify-center text-primary-700 ${social.color} transition-colors shadow-sm hover:shadow-md`}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={social.name}
@@ -153,23 +153,23 @@ export default function ContactInfo() {
       )}
 
       {/* Business Hours */}
-      <div className="bg-white rounded-xl border border-surface-200 p-6 shadow-sm">
+      <div className="bg-panel rounded-xl border border-black/10 p-6 shadow-lg">
         <h3 className="text-lg font-semibold text-primary-900 mb-4 text-center">
           Horarios de Atención
         </h3>
         
         <div className="space-y-2 text-sm">
           <div className="flex justify-between items-center py-2 border-b border-surface-100">
-            <span className="text-primary-700">Lunes - Viernes</span>
+            <span className="text-primary-900">Lunes - Viernes</span>
             <span className="font-medium text-primary-900">9:00 - 18:00</span>
           </div>
           <div className="flex justify-between items-center py-2 border-b border-surface-100">
-            <span className="text-primary-700">Sábados</span>
+            <span className="text-primary-900">Sábados</span>
             <span className="font-medium text-primary-900">9:00 - 13:00</span>
           </div>
           <div className="flex justify-between items-center py-2">
-            <span className="text-primary-700">Domingos</span>
-            <span className="font-medium text-primary-600">Cerrado</span>
+            <span className="text-primary-900">Domingos</span>
+            <span className="font-medium text-primary-800">Cerrado</span>
           </div>
         </div>
         

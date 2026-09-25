@@ -14,7 +14,7 @@ export default function SearchBar({ value, onChange, placeholder = "Buscar proye
     >
       <div className="relative">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <svg className="h-5 w-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="h-5 w-5 text-primary-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
         </div>
@@ -24,7 +24,7 @@ export default function SearchBar({ value, onChange, placeholder = "Buscar proye
           value={value}
           onChange={(e) => onChange(e.target.value)}
           aria-label="Buscar proyectos"
-          className="block w-full pl-10 pr-10 py-3 border border-surface-300 rounded-lg leading-5 bg-white placeholder-primary-400 text-primary-900 focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+          className="block w-full pl-10 pr-10 py-3 border border-black/15 rounded-lg leading-5 bg-panel placeholder-primary-400 text-primary-900 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400"
           placeholder={placeholder}
         />
 
@@ -33,7 +33,7 @@ export default function SearchBar({ value, onChange, placeholder = "Buscar proye
             type="button"
             onClick={() => onChange('')}
             aria-label="Limpiar búsqueda"
-            className="absolute inset-y-0 right-0 pr-3 flex items-center text-primary-400 hover:text-primary-600"
+            className="absolute inset-y-0 right-0 pr-3 flex items-center text-primary-700 hover:text-primary-700"
           >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

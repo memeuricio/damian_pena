@@ -34,15 +34,15 @@ export default function ServicesCatalog({ onServiceSelect }) {
               onClick={() => setSelectedCategory(category.key)}
               className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
                 isActive
-                  ? 'bg-accent-600 text-white shadow-md'
-                  : 'bg-surface-100 text-primary-700 hover:bg-surface-200 hover:text-primary-900'
+                  ? 'bg-cyan-400 text-slate-900 shadow-md'
+                  : 'bg-white/5 text-slate-300 ring-1 ring-white/10 hover:bg-white/10 hover:text-white'
               }`}
             >
               {category.label}
               <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${
                 isActive
-                  ? 'bg-accent-500 text-white'
-                  : 'bg-surface-200 text-primary-600'
+                  ? 'bg-slate-900/15 text-slate-900'
+                  : 'bg-white/10 text-slate-300'
               }`}>
                 {count}
               </span>
@@ -65,13 +65,13 @@ export default function ServicesCatalog({ onServiceSelect }) {
       {/* Empty State */}
       {filteredServices.length === 0 && (
         <div className="text-center py-12">
-          <svg className="w-16 h-16 text-surface-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-16 h-16 text-slate-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2V6" />
           </svg>
-          <h3 className="text-lg font-medium text-primary-900 mb-2">
+          <h3 className="text-lg font-medium text-white mb-2">
             No hay servicios disponibles
           </h3>
-          <p className="text-primary-600">
+          <p className="text-slate-300">
             No se encontraron servicios en esta categoría.
           </p>
         </div>

@@ -64,7 +64,7 @@ export default function Modal({
           aria-modal="true"
           aria-label={title}
           tabIndex={-1}
-          className={`relative w-full ${sizeClasses[size]} rounded-lg bg-white shadow-xl transition-all outline-none ${className}`}
+          className={`relative w-full ${sizeClasses[size]} rounded-lg bg-panel shadow-2xl transition-all outline-none ${className}`}
         >
           {/* Header */}
           {title && (

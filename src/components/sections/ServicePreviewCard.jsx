@@ -9,8 +9,8 @@ export default function ServicePreviewCard({ service }) {
     const colors = {
       design: 'bg-sky-100 text-sky-600 group-hover:bg-sky-200',
       consultation: 'bg-emerald-100 text-emerald-600 group-hover:bg-emerald-200',
-      documentation: 'bg-accent-100 text-accent-600 group-hover:bg-accent-200',
-      renovation: 'bg-surface-100 text-primary-600 group-hover:bg-surface-200'
+      documentation: 'bg-accent-100 text-accent-800 group-hover:bg-accent-200',
+      renovation: 'bg-surface-100 text-primary-800 group-hover:bg-surface-200'
     };
     return colors[category] || colors.design;
   };
@@ -27,17 +27,17 @@ export default function ServicePreviewCard({ service }) {
         </div>
 
         {/* Content */}
-        <h3 className="text-xl font-semibold text-primary-900 mb-3 group-hover:text-accent-600 transition-colors">
+        <h3 className="text-xl font-semibold text-primary-900 mb-3 group-hover:text-accent-800 transition-colors">
           {service.title}
         </h3>
 
-        <p className="text-primary-600 mb-4 line-clamp-3">
+        <p className="text-primary-800 mb-4 line-clamp-3">
           {service.description}
         </p>
 
         {/* Features */}
         <div className="mb-6">
-          <ul className="text-sm text-primary-500 space-y-1">
+          <ul className="text-sm text-primary-700 space-y-1">
             {service.features.slice(0, 3).map((feature) => (
               <li key={feature} className="flex items-center justify-center">
                 <svg className="w-4 h-4 text-accent-500 mr-2 shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -51,10 +51,10 @@ export default function ServicePreviewCard({ service }) {
 
         {/* Timeframe and Category */}
         <div className="flex items-center justify-between text-sm">
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-surface-100 text-primary-700">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-surface-100 text-primary-900">
             {getCategoryLabel(service.category)}
           </span>
-          <span className="text-primary-500">
+          <span className="text-primary-700">
             {service.estimatedTimeframe}
           </span>
         </div>

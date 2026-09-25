@@ -82,7 +82,7 @@ export default function ProjectGrid({ onProjectClick }) {
       {/* Results Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
         <div className="flex items-center gap-4">
-          <p className="text-primary-600">
+          <p className="text-slate-300">
             {resultCount} proyecto{resultCount !== 1 ? 's' : ''} encontrado{resultCount !== 1 ? 's' : ''}
           </p>
 
@@ -90,7 +90,7 @@ export default function ProjectGrid({ onProjectClick }) {
             <button
               type="button"
               onClick={handleClearFilters}
-              className="text-sm text-accent-600 hover:text-accent-700 underline"
+              className="text-sm text-cyan-300 hover:text-cyan-200 underline"
             >
               Limpiar filtros
             </button>
@@ -98,14 +98,14 @@ export default function ProjectGrid({ onProjectClick }) {
         </div>
 
         <div className="flex items-center space-x-2">
-          <label htmlFor="sort" className="text-sm text-primary-600">
+          <label htmlFor="sort" className="text-sm text-slate-400">
             Ordenar por:
           </label>
           <select
             id="sort"
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="text-sm border border-surface-300 rounded-md px-3 py-1 bg-white text-primary-700 focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+            className="text-sm border border-black/15 rounded-md px-3 py-1 bg-panel text-primary-700 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400"
           >
             <option value="year">Año (más reciente)</option>
             <option value="title">Nombre (A-Z)</option>
@@ -118,26 +118,26 @@ export default function ProjectGrid({ onProjectClick }) {
       {hasActiveFilters && (
         <div className="mb-6 flex flex-wrap gap-2">
           {searchTerm.trim() && (
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-accent-100 text-accent-800">
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-cyan-400/10 text-cyan-200 ring-1 ring-cyan-400/20">
               Búsqueda: "{searchTerm}"
               <button
                 type="button"
                 onClick={() => setSearchTerm('')}
                 aria-label="Quitar filtro de búsqueda"
-                className="ml-2 text-accent-600 hover:text-accent-800"
+                className="ml-2 text-cyan-300 hover:text-cyan-100"
               >
                 ×
               </button>
             </span>
           )}
           {selectedCategory !== 'all' && (
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-accent-100 text-accent-800">
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-cyan-400/10 text-cyan-200 ring-1 ring-cyan-400/20">
               Categoría: {getCategoryLabel(selectedCategory)}
               <button
                 type="button"
                 onClick={() => setSelectedCategory('all')}
                 aria-label="Quitar filtro de categoría"
-                className="ml-2 text-accent-600 hover:text-accent-800"
+                className="ml-2 text-cyan-300 hover:text-cyan-100"
               >
                 ×
               </button>
@@ -159,13 +159,13 @@ export default function ProjectGrid({ onProjectClick }) {
         </div>
       ) : (
         <div className="text-center py-12">
-          <svg className="w-16 h-16 text-surface-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-16 h-16 text-slate-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
-          <h3 className="text-lg font-medium text-primary-900 mb-2">
+          <h3 className="text-lg font-medium text-white mb-2">
             No se encontraron proyectos
           </h3>
-          <p className="text-primary-600 mb-4">
+          <p className="text-slate-300 mb-4">
             {searchTerm.trim()
               ? `No hay proyectos que coincidan con "${searchTerm}"`
               : 'No hay proyectos en la categoría seleccionada.'}
@@ -174,7 +174,7 @@ export default function ProjectGrid({ onProjectClick }) {
             <button
               type="button"
               onClick={handleClearFilters}
-              className="text-accent-600 hover:text-accent-700 underline"
+              className="text-cyan-300 hover:text-cyan-200 underline"
             >
               Limpiar todos los filtros
             </button>

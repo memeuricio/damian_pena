@@ -86,12 +86,19 @@ Todo el contenido editable vive en `src/data/mockData.js`.
       antepecho y vidrio, y en el SVG se dibujan el arco de giro de las puertas y el
       eje del vidrio. Ambas vistas salen de los mismos datos, así que los huecos
       siempre coinciden.
+- [x] **Circulación de la casa y patio.** La vivienda tiene un pasillo que reparte hacia
+      el dormitorio y el baño (antes el baño solo se abría al dormitorio: era una suite,
+      no una casa), y el patio al fondo lleva reja perimetral, árboles y quincho con sus
+      etiquetas. Todo sale de `PLAN.patio` en `housePlan.js`, y el plano SVG lo dibuja
+      con los mismos datos.
 
 ## 5. Infraestructura y calidad
 
-- [ ] **No hay tests.** Durante el desarrollo se usaron scripts de Playwright + sharp
-      (capturas headless, comparación de píxeles) que viven **fuera del repositorio** y se
-      perderán. Si se quiere repetir esa verificación, hay que recrearlos.
+- [ ] **Faltan tests.** Solo hay uno: `pnpm check:motifs` verifica la geometría de los
+      motivos del fondo (que la caja declarada contenga el dibujo, que las figuras caigan
+      dentro del lienzo y que el trazado aguante cualquier progreso). El resto de la
+      verificación se hizo con scripts de Playwright + sharp que vivían **fuera del
+      repositorio** y se perdieron.
 - [ ] **Historial de git pesado.** Las imágenes originales (34 MB + 16 MB) siguen en
       commits antiguos aunque ya no estén en `public/`. Se limpia con `git filter-repo`.
 - [ ] **`assets/originals/` está en `.gitignore`**: quien clone el repo no puede regenerar

@@ -36,13 +36,16 @@ export const PLAN = {
    * El orden importa: la animación los dibuja en esta secuencia.
    */
   walls: [
+    // Perímetro
     [0, 0, 10, 0],
     [10, 0, 10, 8],
     [10, 8, 0, 8],
     [0, 8, 0, 0],
+    // División principal: a la izquierda los recintos privados, a la derecha los comunes
     [4, 0, 4, 8],
-    [0, 5, 4, 5],
-    [4, 4.5, 10, 4.5],
+    // Zona privada: dormitorio / pasillo / baño
+    [0, 4.2, 4, 4.2],
+    [0, 5.4, 4, 5.4],
   ],
 
   /**
@@ -58,20 +61,21 @@ export const PLAN = {
    * el muro en su dirección de dibujo); ambos solo se usan para dibujar el
    * arco de giro en el plano SVG.
    *
-   * OJO: estas posiciones son de la vivienda de ejemplo. Antes de usarlas en
-   * un proyecto real, revisa la circulación y ajusta los números.
+   * La circulación es la de una casa real: se entra al living, y desde ahí un
+   * pasillo reparte hacia el dormitorio y el baño. El baño NO se abre al
+   * dormitorio (eso era una suite, no una casa).
    */
   openings: [
     // Puerta de acceso — fachada delantera, entra al living comedor
     { wall: 0, from: [6.4, 0], to: [7.4, 0], type: 'door', hinge: 'end', side: -1 },
     // Puerta posterior de la cocina hacia el patio
     { wall: 2, from: [8.4, 8], to: [9.2, 8], type: 'door', hinge: 'start', side: -1 },
-    // Living comedor ↔ cocina
-    { wall: 6, from: [6.5, 4.5], to: [7.5, 4.5], type: 'door', hinge: 'start', side: 1 },
-    // Living comedor ↔ dormitorio
-    { wall: 4, from: [4, 1.4], to: [4, 2.3], type: 'door', hinge: 'end', side: 1 },
-    // Dormitorio ↔ baño + lavandería (suite)
-    { wall: 5, from: [1.5, 5], to: [2.3, 5], type: 'door', hinge: 'start', side: 1 },
+    // Living comedor ↔ pasillo: la puerta de la zona privada
+    { wall: 4, from: [4, 4.4], to: [4, 5.2], type: 'door', hinge: 'start', side: -1 },
+    // Pasillo ↔ dormitorio
+    { wall: 5, from: [1.5, 4.2], to: [2.4, 4.2], type: 'door', hinge: 'start', side: -1 },
+    // Pasillo ↔ baño
+    { wall: 6, from: [1.5, 5.4], to: [2.4, 5.4], type: 'door', hinge: 'start', side: 1 },
     // Ventana del dormitorio — fachada delantera
     { wall: 0, from: [0.8, 0], to: [2.0, 0], type: 'window' },
     // Ventana del dormitorio — costado izquierdo
@@ -88,12 +92,62 @@ export const PLAN = {
 
   /** Etiquetas que aparecen dentro del modelo al terminar la animación. */
   rooms: [
-    { name: 'Dormitorio', area: '20 m²', x: 2, z: 2.5 },
-    { name: 'Baño + lavandería', area: '12 m²', x: 2, z: 6.5 },
-    { name: 'Living comedor', area: '27 m²', x: 7, z: 2.25 },
-    { name: 'Cocina', area: '21 m²', x: 7, z: 6.25 },
+    { name: 'Dormitorio', area: '16,8 m²', x: 2, z: 2.1 },
+    { name: 'Baño y lavandería', area: '10,4 m²', x: 2, z: 6.7 },
+    // Sin la pared divisoria, el living y la cocina son un solo espacio
+    { name: 'Living comedor y cocina', area: '48 m²', x: 7, z: 4 },
   ],
+
+  /**
+   * Patio al fondo de la casa. Se dibuja en el modelo 3D y en el plano SVG a
+   * partir de estos mismos datos.
+   */
+  patio: {
+    /** Fondo del patio, en metros, medido desde el muro posterior. */
+    depth: 4,
+
+    /** Altura de la reja, en unidades del modelo (algo más de medio muro). */
+    fenceHeight: 0.72,
+
+    /** Separación entre postes de la reja, en metros. */
+    fencePostStep: 0.75,
+
+    /** La reja sigue el contorno del patio, igual que los muros. */
+    fenceWalls: [
+      [0.15, 12, 9.85, 12],
+      [0.15, 8.15, 0.15, 11.85],
+      [9.85, 8.15, 9.85, 11.85],
+    ],
+
+    /**
+     * Elementos del patio. `type` decide cómo se dibujan:
+     *   tree    → tronco y copa
+     *   quincho → cubierta sobre pilares con mesón
+     *
+     * Solo llevan `name` los que se etiquetan en el plano: los árboles y la reja
+     * se reconocen solos y sus etiquetas solo añadían ruido.
+     */
+    elements: [
+      { type: 'tree', x: 1.8, z: 10.1, radius: 0.95 },
+      { type: 'tree', x: 4.6, z: 11.0, radius: 0.7 },
+      { type: 'quincho', name: 'Quincho', x: 7.3, z: 10.4, width: 3.2, depth: 2.4 },
+    ],
+  },
+
+  /**
+   * Ejes estructurales, para la simbología del plano: las líneas de eje con sus
+   * burbujas numeradas y con letras.
+   */
+  axes: {
+    /** Ejes verticales (coordenada x). */
+    vertical: [0, 4, 10],
+    /** Ejes horizontales (coordenada z). */
+    horizontal: [0, 4.2, 8],
+  },
 };
+
+/** Fondo total del terreno: la casa más el patio. */
+export const PLOT_DEPTH = PLAN.depth + PLAN.patio.depth;
 
 /**
  * Duración de cada fase de la animación, en segundos.

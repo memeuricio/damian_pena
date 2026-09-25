@@ -27,7 +27,7 @@ export default function ProjectPreviewCard({ project }) {
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
               {getCategoryLabel(project.category)}
             </span>
-            <span className="text-sm text-slate-500">
+            <span className="text-sm text-slate-700">
               {project.specifications.year}
             </span>
           </div>
@@ -36,11 +36,11 @@ export default function ProjectPreviewCard({ project }) {
             {project.title}
           </h3>
 
-          <p className="text-slate-600 text-sm mb-4 line-clamp-2">
+          <p className="text-slate-700 text-sm mb-4 line-clamp-2">
             {project.shortDescription}
           </p>
 
-          <div className="flex items-center justify-between text-sm text-slate-500">
+          <div className="flex items-center justify-between text-sm text-slate-700">
             {project.specifications.area ? (
               <span>{project.specifications.area}</span>
             ) : null}

@@ -37,6 +37,23 @@
   --color-surface-300: #cbd5e1;
   --color-surface-400: #94a3b8;
 
+  /*
+   * Paneles del tema oscuro. El blanco puro contra el fondo #0a0e14 era un
+   * contraste demasiado duro, y un tono casi blanco se sigue leyendo como
+   * blanco: estos son tonos medios, que es lo que de verdad baja el contraste.
+   *
+   * OJO: al ser tonos medios, el texto secundario tiene que ser oscuro de
+   * verdad. Con `primary-600` la relación de contraste se queda en 4.2:1, por
+   * debajo del mínimo cómodo de lectura; por eso dentro de las tarjetas se usa
+   * `primary-700` hacia abajo.
+   *
+   * - `panel`: tarjetas de contenido y controles.
+   * - `panel-sunken`: fondo de los visores 3D, más profundo, para que las
+   *   maquetas blancas se despeguen.
+   */
+  --color-panel: #aebdd3;
+  --color-panel-sunken: #93a6c0;
+
   /* sky-* y emerald-* son colores por defecto de Tailwind, no hace falta redefinirlos. */
 
   --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -67,11 +84,23 @@
   html {
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
+    /*
+     * El fondo oscuro va en `html`, no en `body`. Un elemento con z-index
+     * negativo (el canvas del fondo) se pinta ANTES que el fondo del body, así
+     * que si el body fuera opaco taparía las líneas animadas.
+     */
+    background-color: #0a0e14;
   }
 
   body {
     font-family: var(--font-sans);
     color: var(--color-primary-900);
+    /*
+     * Regla del tema oscuro: el texto que va SOBRE el espacio modelo (fuera de
+     * las tarjetas claras) lleva su propio color claro en el componente. El
+     * color por defecto se queda oscuro para no romper el interior de las
+     * tarjetas, que es donde vive casi todo el texto.
+     */
     line-height: 1.6;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
